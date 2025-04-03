@@ -1,9 +1,11 @@
 // Các hàm xử lý gọi API
 import axios from 'axios';
 
+const baseURL = process.env.BASE_URL || 'http://localhost:8080';
+
 // Cấu hình axios instance
 const apiClient = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+  baseURL: baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -15,6 +17,9 @@ apiClient.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (config.data instanceof FormData) {
+      config.headers['Content-Type'] = 'multipart/form-data';
     }
     return config;
   },
@@ -34,5 +39,14 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+let login = async (email, password) => {
+  try {
+    const response = await apiClient.post('api/v1/auth/login', { email, password });
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+};
 
 export default apiClient; 
