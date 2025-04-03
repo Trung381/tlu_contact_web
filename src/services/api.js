@@ -49,4 +49,65 @@ let login = async (email, password) => {
   }
 };
 
+<<<<<<< Updated upstream
 export default apiClient; 
+=======
+/**
+ * 
+ * @param {number} page 
+ * @param {number} size 
+ * @param {boolean} sort 
+ * @param {string} search 
+ * @param {boolean} deleted 
+ * @returns {Promise<Object>}
+ */
+let getStaffs = async (page = 0, size = 20, sort = false, search = null, deleted = false) => {
+  try {
+    const response = await apiClient.get('api/v1/staffs');
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+};
+
+/**
+ * @param {string} id 
+ */
+let getStaffById = async (id) => {
+  try {
+    const response = await apiClient.get(`api/v1/staffs/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+}
+
+let createStaff = async (data) => {
+  try {
+    const response = await apiClient.post('api/v1/staffs', data);
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+}
+
+let updateStaff = async (id, data) => {
+  try {
+    const response = await apiClient.post(`api/v1/staffs/${id}`, data);
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+}
+
+let deleteStaffs = async (ids) => {
+  try {
+    const response = await apiClient.delete(`api/v1/staffs/${ids}`);
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+}
+
+export default apiClient;
+>>>>>>> Stashed changes
