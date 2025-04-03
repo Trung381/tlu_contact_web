@@ -17,6 +17,7 @@ const MainLayout = () => {
           <div className="flex-none">
             <ul className="menu menu-horizontal px-1">
               <li><Link to={routes.home}>Trang chủ</Link></li>
+              <li><Link to={routes.staff}>Danh bạ CBGV</Link></li>
               <li><Link to={routes.about}>Giới thiệu</Link></li>
               <li><Link to={routes.contact}>Liên hệ</Link></li>
               {isAuthenticated ? (
