@@ -49,9 +49,6 @@ let login = async (email, password) => {
   }
 };
 
-<<<<<<< Updated upstream
-export default apiClient; 
-=======
 /**
  * 
  * @param {number} page 
@@ -110,4 +107,4 @@ let deleteStaffs = async (ids) => {
 }
 
 export default apiClient;
->>>>>>> Stashed changes
+
