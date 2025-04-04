@@ -70,6 +70,7 @@ let getStaffs = async (page = 0, size = 20, sort = false, search = null, deleted
     }
     console.log('Data fetched successfully:', response.data);
     return response.data.data.content;
+
   } catch (error) {
     throw error.response.data;
   }
