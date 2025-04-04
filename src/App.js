@@ -8,6 +8,7 @@ import MainLayout from './layouts/MainLayout';
 
 // Pages
 import HomePage from './pages/HomePage';
+import Staff from './pages/StaffPage';
 
 // Thêm trang mẫu
 const AboutPage = () => <div className="min-h-[60vh] flex items-center justify-center"><h1 className="text-3xl font-bold">Trang Giới Thiệu</h1></div>;
@@ -63,6 +64,7 @@ function App() {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<HomePage />} />
             <Route path={routes.about} element={<AboutPage />} />
+            <Route path={routes.staff} element={<Staff />} />
             <Route path={routes.contact} element={<ContactPage />} />
             
             {/* Route cần xác thực */}
