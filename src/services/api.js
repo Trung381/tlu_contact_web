@@ -1,14 +1,17 @@
 // Các hàm xử lý gọi API
 import axios from 'axios';
 
-const baseURL = process.env.BASE_URL || 'http://localhost:8080';
+// const baseURL = process.env.BASE_URL || 'http://localhost:8080';
+const baseURL = 'https://tlu-contact-1-0-0.onrender.com'; // Địa chỉ API của bạn
+const token = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImE5ZGRjYTc2YzEyMzMyNmI5ZTJlODJkOGFjNDg0MWU1MzMyMmI3NmEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vdGx1LWNvbnRhY3QtYzBjNjkiLCJhdWQiOiJ0bHUtY29udGFjdC1jMGM2OSIsImF1dGhfdGltZSI6MTc0Mzc3NTIzMSwidXNlcl9pZCI6IkdmZ0o3M1RqVmpoSHB6c0tKbUZhNzNRdUJEZjIiLCJzdWIiOiJHZmdKNzNUalZqaEhwenNLSm1GYTczUXVCRGYyIiwiaWF0IjoxNzQzNzc1MjMxLCJleHAiOjE3NDM3Nzg4MzEsImVtYWlsIjoiMjI1MTA2MTc2M0BlLnRsdS5lZHUudm4iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyIyMjUxMDYxNzYzQGUudGx1LmVkdS52biJdfSwic2lnbl9pbl9wcm92aWRlciI6InBhc3N3b3JkIn19.b1Nd3rH5GMElnAnxKpBj_ATprvwKJZJ0zkLHum1_vBXQ8txaVEKCkBD8hHextPpVxz07kJ_JKb5J-P-r5Zu_wx5RngR3MXad6n0Agypnv3Fu6mU0wEwkamwgPXAXB8sEp2KI84Vx93m07cpo5AkwMtASXkdHkKXSTzSP4OAjyc-7z1brkIvIFEAX9MW84ICNYNeDJn7C24auqjTCmlwyHFmmPIorHM9fy2lLEdcmjFlj2TjwxUXAPd2klfJH15dJm6scnVHyBaqYft0hA174iZeqoLN-UEwIgRKu93TkFgdH-yGIQXIBhlSShdT-znsn5rqoRThv7oa0c5W0-MOrRw"
 
 // Cấu hình axios instance
 const apiClient = axios.create({
   baseURL: baseURL,
   headers: {
     'Content-Type': 'application/json',
-  },
+    'Authorization': `Bearer ${token}`
+  }
 });
 
 // Xử lý interceptor cho request
@@ -42,7 +45,7 @@ apiClient.interceptors.response.use(
 
 let login = async (email, password) => {
   try {
-    const response = await apiClient.post('api/v1/auth/login', { email, password });
+    const response = await apiClient.post('/api/v1/auth/login', { email, password });
     return response.data;
   } catch (error) {
     throw error.response.data;
@@ -60,8 +63,13 @@ let login = async (email, password) => {
  */
 let getStaffs = async (page = 0, size = 20, sort = false, search = null, deleted = false) => {
   try {
-    const response = await apiClient.get('api/v1/staffs');
-    return response.data;
+    const response = await apiClient.get('/api/v1/staff');
+    if (response.status !== 200) {
+      console.error('Error fetching data:', response.statusText);
+      throw new Error('Failed to fetch data');
+    }
+    console.log('Data fetched successfully:', response.data);
+    return response.data.data.content;
   } catch (error) {
     throw error.response.data;
   }
@@ -72,7 +80,7 @@ let getStaffs = async (page = 0, size = 20, sort = false, search = null, deleted
  */
 let getStaffById = async (id) => {
   try {
-    const response = await apiClient.get(`api/v1/staffs/${id}`);
+    const response = await apiClient.get(`/api/v1/staffs/${id}`);
     return response.data;
   } catch (error) {
     throw error.response.data;
@@ -81,7 +89,7 @@ let getStaffById = async (id) => {
 
 let createStaff = async (data) => {
   try {
-    const response = await apiClient.post('api/v1/staffs', data);
+    const response = await apiClient.post('/api/v1/staffs', data);
     return response.data;
   } catch (error) {
     throw error.response.data;
@@ -90,7 +98,7 @@ let createStaff = async (data) => {
 
 let updateStaff = async (id, data) => {
   try {
-    const response = await apiClient.post(`api/v1/staffs/${id}`, data);
+    const response = await apiClient.post(`/api/v1/staffs/${id}`, data);
     return response.data;
   } catch (error) {
     throw error.response.data;
@@ -99,11 +107,11 @@ let updateStaff = async (id, data) => {
 
 let deleteStaffs = async (ids) => {
   try {
-    const response = await apiClient.delete(`api/v1/staffs/${id}`);
+    const response = await apiClient.delete(`/api/v1/staffs/${ids}`);
     return response.data;
   } catch (error) {
     throw error.response.data;
   }
 }
 
-export default apiClient;
+export { apiClient, getStaffs, getStaffById, createStaff, updateStaff, deleteStaffs, login };

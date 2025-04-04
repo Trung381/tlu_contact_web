@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import routes from '../config/routes';
 
@@ -12,23 +12,23 @@ const MainLayout = () => {
       <header className="bg-base-100 shadow-md">
         <div className="navbar container mx-auto">
           <div className="flex-1">
-            <Link to={routes.home} className="btn btn-ghost text-xl">Logo</Link>
+            <Link to={routes.home} className="btn btn-ghost text-2xl">Logo</Link>
           </div>
           <div className="flex-none">
             <ul className="menu menu-horizontal px-1">
-              <li><Link to={routes.home}>Trang chủ</Link></li>
-              <li><Link to={routes.staff}>Danh bạ CBGV</Link></li>
-              <li><Link to={routes.about}>Giới thiệu</Link></li>
-              <li><Link to={routes.contact}>Liên hệ</Link></li>
+              <li><NavLink to={routes.home} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Trang chủ</NavLink></li>
+              <li><NavLink to={routes.staff} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Danh bạ CBGV</NavLink></li>
+              <li><NavLink to={routes.about} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Giới thiệu</NavLink></li>
+              <li><NavLink to={routes.contact} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Liên hệ</NavLink></li>
               {isAuthenticated ? (
                 <>
-                  <li><Link to={routes.profile}>Tài khoản</Link></li>
+                  <li><NavLink to={routes.profile} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Tài khoản</NavLink></li>
                   <li><button onClick={logout}>Đăng xuất</button></li>
                 </>
               ) : (
                 <>
-                  <li><Link to={routes.login}>Đăng nhập</Link></li>
-                  <li><Link to={routes.register}>Đăng ký</Link></li>
+                  <li><NavLink to={routes.login} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Đăng nhập</NavLink></li>
+                  <li><NavLink to={routes.register} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Đăng ký</NavLink></li>
                 </>
               )}
             </ul>

@@ -1,5 +1,5 @@
 // Service xử lý xác thực người dùng
-import apiClient from './api';
+import { apiClient } from './api';
 
 const authService = {
   login: async (email, password) => {

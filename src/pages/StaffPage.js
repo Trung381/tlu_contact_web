@@ -1,69 +1,106 @@
 import React from "react";
 
+import { getStaffs, getStaffById, createStaff, updateStaff, deleteStaffs } from "../services/api";
+
 import Table from "../components/Table";
+import { Button, Space } from 'antd';
+import { EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 
 const StaffPage = () => {
-  const columns = [
-    { key: "name", label: "Name" },
-    { key: "country", label: "Country" },
-    {
-      key: "avatar",
-      label: "Avatar",
-      render: (value) => (
-        <div className="avatar">
-          <div className="mask mask-squircle w-12 h-12">
-            <img src={value} alt="Avatar" />
-          </div>
-        </div>
-      ),
-    },
-    { key: "company", label: "Company" },
-    {
-      key: "jobTitle",
-      label: "Job Title",
-      render: (value) => <span className="badge badge-ghost badge-sm">{value}</span>,
-    },
-    { key: "favoriteColor", label: "Favorite Color" },
-  ];
+  const handleEdit = (record) => {
+    console.log("Sửa:", record);
+    // Thực hiện logic sửa tại đây
+  };
 
-  const data = [
+  const handleDelete = (record) => {
+    console.log("Xóa:", record);
+    // Thực hiện logic xóa tại đây
+  };
+
+  const handleView = (record) => {
+    console.log("Xem:", record);
+    // Thực hiện logic xem chi tiết tại đây
+  };
+
+  const columns = [
     {
-      name: "Hart Hagerty",
-      country: "United States",
-      avatar: "https://img.daisyui.com/images/profile/demo/2@94.webp",
-      company: "Zemlak, Daniel and Leannon",
-      jobTitle: "Desktop Support Technician",
-      favoriteColor: "Purple",
+      title: '',
+      dataIndex: 'photoBase64',
+      key: 'avatar',
+      render: base64 => (
+        <img
+          src={`data:image/png;base64,${base64}`}
+          alt="avatar"
+          style={{ borderRadius: '50%', width: 32, height: 32 }}
+        />
+      ),
+      width: 80,
     },
     {
-      name: "Brice Swyre",
-      country: "China",
-      avatar: "https://img.daisyui.com/images/profile/demo/3@94.webp",
-      company: "Carroll Group",
-      jobTitle: "Tax Accountant",
-      favoriteColor: "Red",
+      title: 'Họ và tên',
+      dataIndex: 'fullName',
+      sorter: true,
+      render: name => `${name}`,
+      width: '15%',
     },
     {
-      name: "Marjy Ferencz",
-      country: "Russia",
-      avatar: "https://img.daisyui.com/images/profile/demo/4@94.webp",
-      company: "Rowe-Schoen",
-      jobTitle: "Office Assistant I",
-      favoriteColor: "Crimson",
+      title: 'Số điện thoại',
+      dataIndex: 'phone',
+      render: phone => `${phone}`,
+      width: '12%',
     },
     {
-      name: "Yancy Tear",
-      country: "Brazil",
-      avatar: "https://img.daisyui.com/images/profile/demo/5@94.webp",
-      company: "Wyman-Ledner",
-      jobTitle: "Community Outreach Specialist",
-      favoriteColor: "Indigo",
+      title: 'Email',
+      dataIndex: 'email',
+      render: email => `${email}`,
+      width: '18%',
+    },
+    {
+      title: 'Chức vụ',
+      dataIndex: 'position',
+      render: position => `${position}`,
+      width: '15%',
+    },
+    {
+      title: 'Đơn vị',
+      dataIndex: 'departments',
+      render: departments => {
+        if (!Array.isArray(departments)) return '';
+        return departments.map(dep => dep.name).join('\n');
+      },
+      width: '20%',
+    },
+    {
+      title: 'Hành động',
+      key: 'action',
+      render: (_, record) => (
+        <Space size="small">
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record)}
+            type="link"
+            style={{ color: 'blue' }}
+          />
+          <Button
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record)}
+            type="link"
+            style={{ color: 'red' }} 
+          />
+          <Button
+            icon={<EyeOutlined />}
+            onClick={() => handleView(record)}
+            type="link"
+            style={{ color: 'green' }}
+          />
+        </Space>
+      ),
     },
   ];
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Table columns={columns} data={data} id="staff-table" />
+      <Table columns={columns} getData={getStaffs} />
     </div>
   );
 };
