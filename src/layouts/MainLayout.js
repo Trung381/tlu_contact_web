@@ -29,6 +29,8 @@ const MainLayout = () => {
                 <>
                   <li><NavLink to={routes.login} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Đăng nhập</NavLink></li>
                   <li><NavLink to={routes.register} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Đăng ký</NavLink></li>
+
+            
                 </>
               )}
             </ul>
