@@ -1,59 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import { Table, Divider, Button, Space } from 'antd';
-import { EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
-
-// const Table = ({ id, data, columns }) => {
-//   return (
-//     <div className="overflow-x-auto">
-//       <table className="table" id={id}>
-//         {/* Head */}
-//         <thead>
-//           <tr>
-//             <th>
-//               <label>
-//                 <input type="checkbox" className="checkbox" />
-//               </label>
-//             </th>
-//             {columns.map((col, index) => (
-//               <th key={index}>{col.label}</th>
-//             ))}
-//             <th>Hành động</th>
-//             <th></th>
-//           </tr>
-//         </thead>
-//         <tbody>
-//           {data.map((row, rowIndex) => (
-//             <tr key={rowIndex}>
-//               <th>
-//                 <label>
-//                   <input type="checkbox" className="checkbox" />
-//                 </label>
-//               </th>
-//               {columns.map((col, colIndex) => (
-//                 <td key={colIndex}>{col.render ? col.render(row[col.key], row) : row[col.key]}</td>
-//               ))}
-//               <td>
-//                 <span className='bg-blue'><EditIcon /></span>
-//                 <DeleteIcon />
-//                 <VisibilityIcon />
-//               </td>
-//             </tr>
-//           ))}
-//         </tbody>
-//       </table>
-//     </div>
-
-//   );
-// };
-
-// export default Table;
-
-
-
-
+import { Table, Divider, Button, Space, Card, Tooltip } from 'antd';
+import { EditOutlined, PlusOutlined, DeleteOutlined, EyeOutlined, ExportOutlined } from '@ant-design/icons';
 
 const toURLSearchParams = record => {
   const params = new URLSearchParams();
@@ -83,8 +30,7 @@ const rowSelection = {
   }),
 };
 
-const TableCustom = ({columns = [], getData}) => {
-  console.log('columns', columns);
+const TableCustom = ({ title, columns = [], getData, onCreate }) => {
   const [data, setData] = useState();
   const [loading, setLoading] = useState(false);
   const [tableParams, setTableParams] = useState({
@@ -134,15 +80,39 @@ const TableCustom = ({columns = [], getData}) => {
 
   return (
     <>
-      <Table
-        rowSelection={Object.assign(rowSelection)}
-        columns={columns} // Truyền các hàm xử lý vào cột "Hành động"
-        rowKey={record => record.staffId}
-        dataSource={data}
-        pagination={tableParams.pagination}
-        loading={loading}
-        onChange={handleTableChange}
-      />
+      <Card style={{ border: '1px solid #d9d9d9', borderRadius: 8 }}>
+        <Table
+          rowSelection={Object.assign(rowSelection)}
+          columns={columns}
+          rowKey={(record) => record.staffId}
+          dataSource={data}
+          pagination={tableParams.pagination}
+          loading={loading}
+          onChange={handleTableChange}
+          title={() => (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f0f0f0', marginBottom: 8, paddingBottom: 8 }}>
+              <strong style={{ fontSize: 16, fontWeight: 600 }}>Danh bạ {title}</strong>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Tooltip title="Xuất excel">
+                  <Button type="primary" icon={<ExportOutlined />}
+                    className="!text-white !bg-[#52c41a] !border-[#52c41a] hover:!bg-[#73d13d] hover:!border-[#73d13d]"
+                  ></Button>
+                </Tooltip>
+                <Tooltip title="Xóa">
+                  <Button type="primary" icon={<DeleteOutlined />}
+                    className="!text-white !bg-[#ff4d4f] !border-[#ff4d4f] hover:!bg-[#ff7875] hover:!border-[#ff7875]"
+                  ></Button>
+                </Tooltip>
+                <Tooltip title="Thêm mới">
+                  <Button type="primary" icon={<PlusOutlined />} onClick={onCreate}
+                    className="!text-white !bg-[#1890ff] !border-[#1890ff] hover:!bg-[#40a9ff] hover:!border-[#40a9ff]"
+                  ></Button>
+                </Tooltip>
+              </div>
+            </div>
+          )}
+        />
+      </Card>
     </>
   );
 };

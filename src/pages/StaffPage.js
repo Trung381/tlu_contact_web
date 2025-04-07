@@ -1,12 +1,38 @@
-import React from "react";
+import React, { useState } from "react";
 
 import { getStaffs, getStaffById, createStaff, updateStaff, deleteStaffs } from "../services/api";
 
 import Table from "../components/Table";
-import { Button, Space } from 'antd';
+import Modal from "../components/Modal";
+import Notifycation from "../components/Notifycation";
+
+import { Button, Space, Tooltip } from 'antd';
 import { EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 
 const StaffPage = () => {
+
+  const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [notifycationType, setNotifycationType] = useState('');
+  const [notifycationMsg, setNotifycationMsg] = useState('');
+  const [notifycationDesc, setNotifycationDesc] = useState('');
+
+  const handleCreateBtnClick = () => {
+    setShowModal(true);
+  };
+
+  const handleOk = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setShowModal(false);
+      setNotifycationType('success');
+      setNotifycationMsg('Thành công');
+      setNotifycationDesc('Thêm mới thành công');
+      console.log('Notifycation state updated');
+    }, 3000);
+  }
+
   const handleEdit = (record) => {
     console.log("Sửa:", record);
     // Thực hiện logic sửa tại đây
@@ -74,34 +100,61 @@ const StaffPage = () => {
       title: 'Hành động',
       key: 'action',
       render: (_, record) => (
-        <Space size="small">
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-            type="link"
-            style={{ color: 'blue' }}
-          />
-          <Button
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record)}
-            type="link"
-            style={{ color: 'red' }} 
-          />
-          <Button
-            icon={<EyeOutlined />}
-            onClick={() => handleView(record)}
-            type="link"
-            style={{ color: 'green' }}
-          />
-        </Space>
+        <div style={{ display: 'flex', gap: 1 }}>
+          <Tooltip title="Chỉnh sửa">
+            <Button
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+              type="link"
+              style={{ color: 'blue' }}
+            />
+          </Tooltip>
+          <Tooltip title="Xóa">
+            <Button
+              icon={<DeleteOutlined />}
+              onClick={() => handleDelete(record)}
+              type="link"
+              style={{ color: 'red' }}
+            />
+          </Tooltip>
+          <Tooltip title="Chi tiết">
+            <Button
+              icon={<EyeOutlined />}
+              onClick={() => handleView(record)}
+              type="link"
+              style={{ color: 'green' }}
+            />
+          </Tooltip>
+        </div>
       ),
     },
   ];
 
+  const title = 'CBGV';
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Table columns={columns} getData={getStaffs} />
-    </div>
+    <>
+      <Notifycation
+        type={notifycationType}
+        message={notifycationMsg}
+        desc={notifycationDesc}
+      />
+      {showModal && (
+        <Modal
+          title={`Thêm mới ${title}`}
+          showModal={showModal}
+          onOk={() => handleOk()}
+          onCancel={() => setShowModal(false)}
+          onClose={() => setShowModal(false)}
+          loading={loading}
+        />
+      )}
+      <Table
+        title={title}
+        columns={columns}
+        getData={getStaffs}
+        onCreate={handleCreateBtnClick} />
+    </>
   );
 };
 
