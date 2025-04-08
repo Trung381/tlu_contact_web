@@ -9,23 +9,22 @@ const Enumerators = {
   warning: 'warning',
 };
 
-const NotificationCustom = ({ type, message, desc }) => {
-  console.log('Notifycation props:', { type, message, desc });
+const NotificationCustom = ({noti}) => {
   const openNotification = () => {
     let icon;
-    if (type === Enumerators.success) {
+    if (noti.type === Enumerators.success) {
       icon = <CheckCircleOutlined style={{ color: '#52c41a' }} />;
-    } else if (type === Enumerators.error) {
+    } else if (noti.type === Enumerators.error) {
       icon = <CloseCircleOutlined style={{ color: '#f5222d' }} />;
-    } else if (type === Enumerators.info) {
+    } else if (noti.type === Enumerators.info) {
       icon = <InfoCircleOutlined style={{ color: '#1890ff' }} />;
-    } else if (type === Enumerators.warning) {
+    } else if (noti.type === Enumerators.warning) {
       icon = <ExclamationCircleOutlined style={{ color: '#faad14' }} />;
     }
 
     notification.open({
-      message: message,
-      description: desc,
+      message: noti.message,
+      description: noti.desc,
       icon: icon,
       placement: 'topRight',
       duration: 3,
@@ -33,8 +32,10 @@ const NotificationCustom = ({ type, message, desc }) => {
   };
 
   React.useEffect(() => {
-    openNotification();
-  }, [type, message, desc]);
+    if (noti.type && noti.message) {
+      openNotification();
+    }
+  }, [noti.type, noti.message, noti.desc]);
 
   return null;
 };

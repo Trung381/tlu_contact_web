@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Divider, Button, Space, Card, Tooltip } from 'antd';
-import { EditOutlined, PlusOutlined, DeleteOutlined, EyeOutlined, ExportOutlined } from '@ant-design/icons';
+import { EditOutlined, PlusOutlined, DeleteOutlined, EyeOutlined, ExportOutlined, ReloadOutlined } from '@ant-design/icons';
 
 const toURLSearchParams = record => {
   const params = new URLSearchParams();
@@ -21,63 +21,15 @@ const getRandomuserParams = params => {
   );
 };
 
-const rowSelection = {
-  onChange: (selectedRowKeys, selectedRows) => {
-    console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-  },
-  getCheckboxProps: record => ({
-    name: record.name,
-  }),
-};
-
-const TableCustom = ({ title, columns = [], getData, onCreate }) => {
-  const [data, setData] = useState();
-  const [loading, setLoading] = useState(false);
-  const [tableParams, setTableParams] = useState({
-    pagination: {
-      current: 1,
-      pageSize: 10,
+const TableCustom = ({ title, columns = [], loading, data, tableParams, onCreate, onDeleteMultiple, setSelectedRows, fetchData }) => {
+  const rowSelection = {
+    onChange: (selectedRowKeys, selectedRows) => {
+      setSelectedRows(selectedRows)
     },
-  });
-  const params = toURLSearchParams(getRandomuserParams(tableParams));
-
-  const fetchData = async () => {
-    setLoading(true);
-    const result = await getData();
-    setData(result)
-    setLoading(false);
-    setTableParams(prevTableParams => ({
-      ...prevTableParams,
-      pagination: {
-        ...prevTableParams.pagination,
-        total: 200,
-      },
-    }));
+    getCheckboxProps: record => ({
+      name: record.name,
+    }),
   };
-
-  useEffect(() => {
-    fetchData();
-  }, [
-    tableParams.pagination?.current,
-    tableParams.pagination?.pageSize,
-    tableParams.sortOrder,
-    tableParams.sortField,
-    JSON.stringify(tableParams.filters),
-  ]);
-
-  const handleTableChange = (pagination, filters, sorter) => {
-    setTableParams({
-      pagination,
-      filters,
-      sortOrder: Array.isArray(sorter) ? undefined : sorter.order,
-      sortField: Array.isArray(sorter) ? undefined : sorter.field,
-    });
-
-    if (pagination.pageSize !== tableParams.pagination?.pageSize) {
-      setData([]);
-    }
-  };
-
   return (
     <>
       <Card style={{ border: '1px solid #d9d9d9', borderRadius: 8 }}>
@@ -88,7 +40,6 @@ const TableCustom = ({ title, columns = [], getData, onCreate }) => {
           dataSource={data}
           pagination={tableParams.pagination}
           loading={loading}
-          onChange={handleTableChange}
           title={() => (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f0f0f0', marginBottom: 8, paddingBottom: 8 }}>
               <strong style={{ fontSize: 16, fontWeight: 600 }}>Danh bạ {title}</strong>
@@ -98,14 +49,19 @@ const TableCustom = ({ title, columns = [], getData, onCreate }) => {
                     className="!text-white !bg-[#52c41a] !border-[#52c41a] hover:!bg-[#73d13d] hover:!border-[#73d13d]"
                   ></Button>
                 </Tooltip>
-                <Tooltip title="Xóa">
-                  <Button type="primary" icon={<DeleteOutlined />}
+                <Tooltip title="Xóa hàng loạt">
+                  <Button type="primary" icon={<DeleteOutlined />} onClick={onDeleteMultiple}
                     className="!text-white !bg-[#ff4d4f] !border-[#ff4d4f] hover:!bg-[#ff7875] hover:!border-[#ff7875]"
                   ></Button>
                 </Tooltip>
                 <Tooltip title="Thêm mới">
                   <Button type="primary" icon={<PlusOutlined />} onClick={onCreate}
                     className="!text-white !bg-[#1890ff] !border-[#1890ff] hover:!bg-[#40a9ff] hover:!border-[#40a9ff]"
+                  ></Button>
+                </Tooltip>
+                <Tooltip title="Làm mới">
+                  <Button type="primary" icon={<ReloadOutlined />} onClick={fetchData}
+                    className="!text-black !bg-[#f0f0f0] !border-[#d9d9d9] hover:!bg-[#d9d9d9] hover:!border-[#bfbfbf]"
                   ></Button>
                 </Tooltip>
               </div>
