@@ -40,6 +40,7 @@ const TableCustom = ({ title, columns = [], loading, data, tableParams, onCreate
           dataSource={data}
           pagination={tableParams.pagination}
           loading={loading}
+          scroll={{ x: 'max-content' }}
           title={() => (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f0f0f0', marginBottom: 8, paddingBottom: 8 }}>
               <strong style={{ fontSize: 16, fontWeight: 600 }}>Danh bạ {title}</strong>

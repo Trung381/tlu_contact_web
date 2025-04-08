@@ -60,9 +60,9 @@ const StaffPage = () => {
       key: 'avatar',
       render: base64 => (
         <img
-          src={`data:image/png;base64,${base64}`}
+          src={base64 ? `data:image/png;base64,${base64}` : `/avatar.png`}
           alt="avatar"
-          style={{ borderRadius: '50%', width: 32, height: 32 }}
+          style={{ borderRadius: '50%', width: 28, height: 28 }}
         />
       ),
       width: 80,
