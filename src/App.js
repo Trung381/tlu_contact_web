@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import routes from './config/routes';
-import LoginPage from "./pages/LoginPage"
 // Layouts
 import MainLayout from './layouts/MainLayout';
 
