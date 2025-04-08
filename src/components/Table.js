@@ -1,59 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import { Table, Divider, Button, Space } from 'antd';
-import { EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
-
-// const Table = ({ id, data, columns }) => {
-//   return (
-//     <div className="overflow-x-auto">
-//       <table className="table" id={id}>
-//         {/* Head */}
-//         <thead>
-//           <tr>
-//             <th>
-//               <label>
-//                 <input type="checkbox" className="checkbox" />
-//               </label>
-//             </th>
-//             {columns.map((col, index) => (
-//               <th key={index}>{col.label}</th>
-//             ))}
-//             <th>Hành động</th>
-//             <th></th>
-//           </tr>
-//         </thead>
-//         <tbody>
-//           {data.map((row, rowIndex) => (
-//             <tr key={rowIndex}>
-//               <th>
-//                 <label>
-//                   <input type="checkbox" className="checkbox" />
-//                 </label>
-//               </th>
-//               {columns.map((col, colIndex) => (
-//                 <td key={colIndex}>{col.render ? col.render(row[col.key], row) : row[col.key]}</td>
-//               ))}
-//               <td>
-//                 <span className='bg-blue'><EditIcon /></span>
-//                 <DeleteIcon />
-//                 <VisibilityIcon />
-//               </td>
-//             </tr>
-//           ))}
-//         </tbody>
-//       </table>
-//     </div>
-
-//   );
-// };
-
-// export default Table;
-
-
-
-
+import { Table, Divider, Button, Space, Card, Tooltip } from 'antd';
+import { EditOutlined, PlusOutlined, DeleteOutlined, EyeOutlined, ExportOutlined, ReloadOutlined } from '@ant-design/icons';
 
 const toURLSearchParams = record => {
   const params = new URLSearchParams();
@@ -74,75 +21,55 @@ const getRandomuserParams = params => {
   );
 };
 
-const rowSelection = {
-  onChange: (selectedRowKeys, selectedRows) => {
-    console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-  },
-  getCheckboxProps: record => ({
-    name: record.name,
-  }),
-};
-
-const TableCustom = ({columns = [], getData}) => {
-  console.log('columns', columns);
-  const [data, setData] = useState();
-  const [loading, setLoading] = useState(false);
-  const [tableParams, setTableParams] = useState({
-    pagination: {
-      current: 1,
-      pageSize: 10,
+const TableCustom = ({ title, columns = [], loading, data, tableParams, onCreate, onDeleteMultiple, setSelectedRows, fetchData }) => {
+  const rowSelection = {
+    onChange: (selectedRowKeys, selectedRows) => {
+      setSelectedRows(selectedRows)
     },
-  });
-  const params = toURLSearchParams(getRandomuserParams(tableParams));
-
-  const fetchData = async () => {
-    setLoading(true);
-    const result = await getData();
-    setData(result)
-    setLoading(false);
-    setTableParams(prevTableParams => ({
-      ...prevTableParams,
-      pagination: {
-        ...prevTableParams.pagination,
-        total: 200,
-      },
-    }));
+    getCheckboxProps: record => ({
+      name: record.name,
+    }),
   };
-
-  useEffect(() => {
-    fetchData();
-  }, [
-    tableParams.pagination?.current,
-    tableParams.pagination?.pageSize,
-    tableParams.sortOrder,
-    tableParams.sortField,
-    JSON.stringify(tableParams.filters),
-  ]);
-
-  const handleTableChange = (pagination, filters, sorter) => {
-    setTableParams({
-      pagination,
-      filters,
-      sortOrder: Array.isArray(sorter) ? undefined : sorter.order,
-      sortField: Array.isArray(sorter) ? undefined : sorter.field,
-    });
-
-    if (pagination.pageSize !== tableParams.pagination?.pageSize) {
-      setData([]);
-    }
-  };
-
   return (
     <>
-      <Table
-        rowSelection={Object.assign(rowSelection)}
-        columns={columns} // Truyền các hàm xử lý vào cột "Hành động"
-        rowKey={record => record.staffId}
-        dataSource={data}
-        pagination={tableParams.pagination}
-        loading={loading}
-        onChange={handleTableChange}
-      />
+      <Card style={{ border: '1px solid #d9d9d9', borderRadius: 8 }}>
+        <Table
+          rowSelection={Object.assign(rowSelection)}
+          columns={columns}
+          rowKey={(record) => record.staffId}
+          dataSource={data}
+          pagination={tableParams.pagination}
+          loading={loading}
+          scroll={{ x: 'max-content' }}
+          title={() => (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f0f0f0', marginBottom: 8, paddingBottom: 8 }}>
+              <strong style={{ fontSize: 16, fontWeight: 600 }}>Danh bạ {title}</strong>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Tooltip title="Xuất excel">
+                  <Button type="primary" icon={<ExportOutlined />}
+                    className="!text-white !bg-[#52c41a] !border-[#52c41a] hover:!bg-[#73d13d] hover:!border-[#73d13d]"
+                  ></Button>
+                </Tooltip>
+                <Tooltip title="Xóa hàng loạt">
+                  <Button type="primary" icon={<DeleteOutlined />} onClick={onDeleteMultiple}
+                    className="!text-white !bg-[#ff4d4f] !border-[#ff4d4f] hover:!bg-[#ff7875] hover:!border-[#ff7875]"
+                  ></Button>
+                </Tooltip>
+                <Tooltip title="Thêm mới">
+                  <Button type="primary" icon={<PlusOutlined />} onClick={onCreate}
+                    className="!text-white !bg-[#1890ff] !border-[#1890ff] hover:!bg-[#40a9ff] hover:!border-[#40a9ff]"
+                  ></Button>
+                </Tooltip>
+                <Tooltip title="Làm mới">
+                  <Button type="primary" icon={<ReloadOutlined />} onClick={fetchData}
+                    className="!text-black !bg-[#f0f0f0] !border-[#d9d9d9] hover:!bg-[#d9d9d9] hover:!border-[#bfbfbf]"
+                  ></Button>
+                </Tooltip>
+              </div>
+            </div>
+          )}
+        />
+      </Card>
     </>
   );
 };
