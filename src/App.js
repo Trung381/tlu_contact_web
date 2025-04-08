@@ -3,20 +3,21 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import routes from './config/routes';
-
+import LoginPage from "./pages/LoginPage"
 // Layouts
 import MainLayout from './layouts/MainLayout';
 
 // Pages 
 import HomePage from './pages/HomePage';
-import StaffPage from './pages/StaffPage';
 import ResetPasswordPage from './pages/ResetPasswordPage'; // Giữ nguyên component hoàn chỉnh
 import LoginPage from './pages/LoginPage';
+import Staff from './pages/StaffPage';
+import Student from './pages/StudentPage';
+import Department from './pages/DepartmentPage';
 
 // Các trang mẫu giữ nguyên như cũ
 const AboutPage = () => <div className="min-h-[60vh] flex items-center justify-center"><h1 className="text-3xl font-bold">Trang Giới Thiệu</h1></div>;
 const ContactPage = () => <div className="min-h-[60vh] flex items-center justify-center"><h1 className="text-3xl font-bold">Trang Liên Hệ</h1></div>;
-//const LoginPage = () => <div className="min-h-[60vh] flex items-center justify-center"><h1 className="text-3xl font-bold">Trang Đăng Nhập</h1></div>;
 const RegisterPage = () => <div className="min-h-[60vh] flex items-center justify-center"><h1 className="text-3xl font-bold">Trang Đăng Ký</h1></div>;
 const ProfilePage = () => <div className="min-h-[60vh] flex items-center justify-center"><h1 className="text-3xl font-bold">Trang Cá Nhân</h1></div>;
 const NotFoundPage = () => <div className="min-h-[60vh] flex items-center justify-center"><h1 className="text-3xl font-bold">404 - Không Tìm Thấy Trang</h1></div>;
@@ -69,7 +70,9 @@ function App() {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<HomePage />} />
             <Route path={routes.about} element={<AboutPage />} />
-            <Route path={routes.staff} element={<StaffPage />} />
+            <Route path={routes.staff} element={<Staff />} />
+            <Route path={routes.student} element={<Student />} />
+            <Route path={routes.department} element={<Department />} />
             <Route path={routes.contact} element={<ContactPage />} />
             
             {/* Route cần xác thực */}

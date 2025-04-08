@@ -17,9 +17,9 @@ const MainLayout = () => {
           <div className="flex-none">
             <ul className="menu menu-horizontal px-1">
               <li><NavLink to={routes.home} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Trang chủ</NavLink></li>
+              <li><NavLink to={routes.department} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Danh bạ đơn vị</NavLink></li>
               <li><NavLink to={routes.staff} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Danh bạ CBGV</NavLink></li>
-              <li><NavLink to={routes.about} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Giới thiệu</NavLink></li>
-              <li><NavLink to={routes.contact} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Liên hệ</NavLink></li>
+              <li><NavLink to={routes.student} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Danh bạ sinh viên</NavLink></li>
               {isAuthenticated ? (
                 <>
                   <li><NavLink to={routes.profile} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Tài khoản</NavLink></li>
@@ -28,9 +28,6 @@ const MainLayout = () => {
               ) : (
                 <>
                   <li><NavLink to={routes.login} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Đăng nhập</NavLink></li>
-                  <li><NavLink to={routes.register} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Đăng ký</NavLink></li>
-
-            
                 </>
               )}
             </ul>
