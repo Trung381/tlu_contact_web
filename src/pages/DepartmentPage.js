@@ -69,110 +69,78 @@ const DepartmentPage = () => {
   
 
   const create = async (values) => {
-    if (!values || !values.name || !values.email) {
-      setNotification({
-        type: 'error',
-        message: 'Dữ liệu không hợp lệ',
-        desc: 'Vui lòng điền đầy đủ thông tin trước khi gửi'
-      });
-      return;
-    }
-  
-    setCreateLoading(true);
-    try {
-      const payload = {
-        ...values,
-        departmentIds: Array.isArray(values.departmentIds) ? values.departmentIds : [],
-      };
-      const result = await createDepartments(payload);
-  
-      if (result?.status === 201 || result?.status === 200) {
-        fetchData();
-        setNotification({ type: 'success', message: 'Thành công', desc: 'Thêm mới thành công' });
-        setShowModalCreate(false);
-      } else {
-        throw new Error(result?.message || 'Thêm mới thất bại');
-      }
-    } catch (error) {
-      setNotification({ type: 'error', message: 'Thất bại', desc: error.message });
-    } finally {
-      setCreateLoading(false);
-      setTimeout(() => {
-        setNotification({ type: null, message: null, desc: null });
-      }, 3000);
-    }
-  };
+		setLoading(true);
+		try {
+			const result = await createDepartments(values);
+			if (result.status === 201 || result.status === 200) {
+				fetchData();
+				setNotification({ type: 'success', message: 'Thành công', desc: 'Thêm mới thành công' });
+				setShowModalCreate(false);
+			} else {
+				setNotification({ type: 'error', message: 'Thất bại', desc: result?.message || 'Có lỗi xảy ra' });
+			}
+		} catch (error) {
+			setNotification({ type: 'error', message: 'Thất bại!', desc: error.message });
+		} finally {
+			setLoading(false);
+			setTimeout(() => {
+				setNotification({ type: null, message: null, desc: null });
+			}, 3000);
+		}
+	}
   
 
   useEffect(() => { fetchData(); }, []);
 
   const fillData = (record) => {
     form.setFieldsValue({
-      departmentId: record.departmentId,
+      code: record.code,
       name: record.name,
       phone: record.phone,
       email: record.email,
-      departmentIds: record.departments?.map(dep => dep.id) || [],
+      //parentDepartmentId: record.parentDepartmentId?.map(dep => dep.id) || [],
     });
     }
 
     const update = async (record) => {
-      if (!record?.departmentId) {
-        setNotification({
-          type: 'error',
-          message: 'Không tìm thấy ID phòng ban',
-          desc: 'Cập nhật thất bại do thiếu thông tin'
-        });
-        return;
-      }
-    
       try {
-        const result = await updateDepartments(record.departmentId, record);
-        if (result?.status === 200) {
+        const result = await updateDepartments(record.code, record);
+        if (result.status === 200) {
           fetchData();
-          setNotification({ type: 'success', message: 'Thành công', desc: 'Cập nhật thành công' });
+          setNotification({ type: 'success', message: 'Thành công', desc: 'Cập nhật thông tin thành công' });
           setShowModalUpdate(false);
         } else {
-          throw new Error(result?.message || 'Cập nhật thất bại');
+          setNotification({ type: 'error', message: 'Thất bại', desc: result?.message || null });
         }
       } catch (error) {
-        setNotification({ type: 'error', message: 'Thất bại', desc: error.message });
+        setNotification({ type: 'error', message: 'Thất bại', desc: 'Không thể cập nhật thông tin của sinh viên này' });
       } finally {
         setTimeout(() => {
           setNotification({ type: null, message: null, desc: null });
         }, 3000);
       }
-    };
+    }
     
 
     const deleteDepartment = async (record) => {
-      if (!record?.departmentId) {
-        setNotification({
-          type: 'error',
-          message: 'Thiếu ID phòng ban',
-          desc: 'Không thể xóa vì không có ID hợp lệ'
-        });
-        return;
-      }
-    
       setLoading(true);
-      try {
-        const result = await deleteDepartments({ ids: [record.departmentId] });
-        if (result?.status === 200) {
-          fetchData();
-          setNotification({ type: 'success', message: 'Thành công', desc: 'Xóa thành công' });
-        } else {
-          throw new Error(result?.message || 'Xóa thất bại');
-        }
-      } catch (error) {
-        setNotification({ type: 'error', message: 'Thất bại', desc: error.message });
-      } finally {
-        setLoading(false);
-        setShowModalDelete(false);
-        setTimeout(() => {
-          setNotification({ type: null, message: null, desc: null });
-        }, 3000);
-      }
+		try {
+			const result = await deleteDepartments({ ids: [record.code] });
+			if (result.status === 200) {
+				fetchData();
+				setNotification({ type: 'success', message: 'Thành công', desc: 'Xóa thành công' });
+			} else {
+				setNotification({ type: 'error', message: 'Thất bại', desc: result?.message || null });
+			}
+		} catch (error) {
+			setNotification({ type: 'error', message: 'Thất bại', desc: 'Không thể xóa sinh viên này' });
+		} finally {
+			setLoading(false);
+			setShowModalDelete(false);
+			setTimeout(() => {
+				setNotification({ type: null, message: null, desc: null });
+			}, 3000);
+		}
     };
     
 
@@ -181,28 +149,23 @@ const DepartmentPage = () => {
 
 
     const deleteMultipleDepartments = async () => {
-      const ids = selectedRows.map(row => row.departmentId).filter(Boolean);
-      if (ids.length === 0) {
-        setNotification({ type: 'error', message: 'Không có ID hợp lệ để xóa' });
-        return;
-      }
-    
       setLoading(true);
-      try {
-        const result = await deleteDepartments({ ids });
-        if (result?.status === 200) {
-          fetchData();
-          setNotification({ type: 'success', message: 'Thành công', desc: `Đã xóa ${ids.length} bản ghi` });
-          setShowModal(false);
-          setSelectedRows([]);
-        } else {
-          throw new Error(result?.message || 'Xóa thất bại');
-        }
-      } catch (error) {
-        setNotification({ type: 'error', message: 'Thất bại', desc: error.message });
-      } finally {
-        setLoading(false);
-      }
+		try {
+			const ids = selectedRows.map(row => row.code);
+			const result = await deleteDepartments({ ids: ids });
+			if (result.status === 200) {
+				fetchData();
+				setNotification({ type: 'success', message: 'Thành công', desc: `Đã xóa ${ids.length} bản ghi thành công` });
+				setShowModal(false);
+				setSelectedRows([]);
+			} else {
+				setNotification({ type: 'error', message: 'Thất bại', desc: result?.message || 'Có lỗi xảy ra' });
+			}
+		} catch (error) {
+			setNotification({ type: 'error', message: 'Thất bại', desc: 'Không thể xóa các bản ghi đã chọn' });
+		} finally {
+			setLoading(false);
+		}
     };
     
 
@@ -212,7 +175,15 @@ const DepartmentPage = () => {
     // Thực hiện logic xem chi tiết tại đây
   };
 
-  const columns = [{
+  const columns = [
+    {
+      title: 'Mã Phong Ban',
+      dataIndex: 'code',
+      sorter: true,
+      render: code => `${code}`,
+      width: '15%',
+    },
+    {
     title: '',
     dataIndex: 'photoBase64',
     key: 'avatar',
@@ -245,12 +216,12 @@ const DepartmentPage = () => {
     width: '18%',
   },
   
-  {
-    title: 'Đơn vị truc thuoc',
-    dataIndex: 'department',
-    render: department => `${department?.name}`,
-    width: '20%',
-  },
+  // {
+  //   title: 'Đơn vị truc thuoc',
+  //   dataIndex: 'parentDepartmentI',
+  //   render: parentDepartmentId => `${parentDepartmentId?.name}`,
+  //   width: '20%',
+  // },
   {
     title: 'Hành động',
     key: 'action',
@@ -288,14 +259,14 @@ const DepartmentPage = () => {
   const getFormContent = (onFinish) => (
     <Form form={form} layout="vertical" onFinish={onFinish}
       initialValues={{
-        departmentId: '',
+        code: '',
         name: '',
         phone: '',
         email: '',
-        department: '',
+        //department: '',
       }}
     >
-      <Form.Item label="Mã phòng ban" name="departmentId"
+      <Form.Item label="Mã phòng ban" name="code"
         rules={[{ required: true, message: 'Vui lòng nhập mã phong ban!' }]}
       ><Input />
       </Form.Item>
@@ -321,7 +292,7 @@ const DepartmentPage = () => {
         </Upload>
       </Form.Item>
 
-      <Form.Item label="Đơn vị truc thuoc" name="department"
+      {/* <Form.Item label="Đơn vị truc thuoc" name="department"
         rules={[{ required: true, message: 'Vui lòng chọn đơn vị!' }]}
       >
         <Select placeholder="Chọn đơn vị"
@@ -331,7 +302,7 @@ const DepartmentPage = () => {
             { label: 'Phòng Marketing', value: 'Marketing' },
           ]}
         />
-      </Form.Item>
+      </Form.Item> */}
     </Form>
   )
 
@@ -446,7 +417,7 @@ const DepartmentPage = () => {
         onDeleteMultiple={handleDeleteMultiple}
         setSelectedRows={setSelectedRows}
         fetchData={fetchData}
-        rowKey="departmentId" />
+        rowKey="code" />
     </>
   );
 };
