@@ -397,7 +397,8 @@ const StaffPage = () => {
         onCreate={handleCreate}
         onDeleteMultiple={handleDeleteMultiple} 
         setSelectedRows={setSelectedRows}
-        fetchData={fetchData}/>
+        fetchData={fetchData}
+        rowKey="staffId"/>
     </>
   );
 };
