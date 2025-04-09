@@ -2,8 +2,8 @@
 import axios from 'axios';
 
 // const baseURL = process.env.BASE_URL || 'http://localhost:8080';
-const baseURL = 'http://localhost:8080'; // Địa chỉ API của bạn
-const token = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjcxMTE1MjM1YTZjNjE0NTRlZmRlZGM0NWE3N2U0MzUxMzY3ZWViZTAiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vdGx1LWNvbnRhY3QtYzBjNjkiLCJhdWQiOiJ0bHUtY29udGFjdC1jMGM2OSIsImF1dGhfdGltZSI6MTc0NDEwOTU0MywidXNlcl9pZCI6IkdmZ0o3M1RqVmpoSHB6c0tKbUZhNzNRdUJEZjIiLCJzdWIiOiJHZmdKNzNUalZqaEhwenNLSm1GYTczUXVCRGYyIiwiaWF0IjoxNzQ0MTA5NTQzLCJleHAiOjE3NDQxMTMxNDMsImVtYWlsIjoiMjI1MTA2MTc2M0BlLnRsdS5lZHUudm4iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyIyMjUxMDYxNzYzQGUudGx1LmVkdS52biJdfSwic2lnbl9pbl9wcm92aWRlciI6InBhc3N3b3JkIn19.pozx7o9inlTR1rN-YdVketcdIAxuiozoYl9KonyJtAblGxlWka5WphcXEVERu2aTwK5HfeEzO-RoPnrO03-QBoVKGjeVe98seqU4WpRgZwyKWzNzkaYNv13RfmRTS1stihWcmfJi1vprRUFLEVCvo5bmXzkHN4DM-C5yZjGIX8QT8yDzVp5M1TtI9PKLhudxuJY9G1sMTEF9cVs72DKigTwK77XPimoNU-onFYtgEiBNm7ux4nIGJIQPpH0-22fw4_PfeVluLzBIOL1GwYVDYtZZbaO4N8a8F2zuDstBGv21O7jgLEbZ31tHN3Ug43fI92carpszDXcnavrFtNcsCA"
+const baseURL = 'https://tlu-contact-1-0-0.onrender.com'; // Địa chỉ API của bạn
+const token = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjcxMTE1MjM1YTZjNjE0NTRlZmRlZGM0NWE3N2U0MzUxMzY3ZWViZTAiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vdGx1LWNvbnRhY3QtYzBjNjkiLCJhdWQiOiJ0bHUtY29udGFjdC1jMGM2OSIsImF1dGhfdGltZSI6MTc0NDE4MDQ4MiwidXNlcl9pZCI6ImpLQ0VUc091ckhQRDlsaWE4bWtPVVMzNTA2djIiLCJzdWIiOiJqS0NFVHNPdXJIUEQ5bGlhOG1rT1VTMzUwNnYyIiwiaWF0IjoxNzQ0MTgwNDgyLCJleHAiOjE3NDQxODQwODIsImVtYWlsIjoiMjI1MTA2MTcyNUBlLnRsdS5lZHUudm4iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyIyMjUxMDYxNzI1QGUudGx1LmVkdS52biJdfSwic2lnbl9pbl9wcm92aWRlciI6InBhc3N3b3JkIn19.GQOcGabRMANPPW4zKAONt9QXMgOFtokxibhMmBTGPcPS8P9sCpkHAhJzrvWhnEUOdhObocJkCnPhsb3jsbduP6anEqRKaoy_scAVmMBJZ2wx8H44rw2dpllkotVVyXUKHX0-RwnkDCW-nqQU-LfndJwZlB-CcNOjyq6eGs9oBhJYDrvPN9ZZgGoxyP66e7qbrSP297y5w7Tv86alpuwQvc4CkpgUUEJkm8f0N2CVymunawHujdBsahA4Rp7tnaazId4rA1Sqn8Nz3jWR4-J65vXLg1F0_S10CDOd1l-gMFddlJeMX2XH-qBOoWinTRd13_M8F1yhP_ky-gdSPDaobA"
 
 // Cấu hình axios instance
 const apiClient = axios.create({
@@ -137,7 +137,25 @@ let createStudent = async (data) => {
   }
 }
 
+let updateStudent = async (id, data) => {
+  try {
+    const response = await apiClient.post(`/api/v1/student/update/${id}`, data);
+    return response;
+  } catch (error) {
+    return error.response.data;
+  }
+}
+
+let deleteStudents = async (ids) => {
+  try {
+    const response = await apiClient.post(`/api/v1/student/delete`, ids);
+    console.log('Response:', response);
+    return response;
+  } catch (error) {
+    throw error.response.data;
+  }
+}
 export {
   apiClient, getStaffs, getStaffById, createStaff, updateStaff, deleteStaffs, login,
-  getStudents, createStudent
+  getStudents, createStudent, updateStudent, deleteStudents
 };

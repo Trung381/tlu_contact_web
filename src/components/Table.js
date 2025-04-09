@@ -21,7 +21,7 @@ const getRandomuserParams = params => {
   );
 };
 
-const TableCustom = ({ title, columns = [], loading, data, tableParams, onCreate, onDeleteMultiple, setSelectedRows, fetchData }) => {
+const TableCustom = ({ title, columns = [], loading, data, tableParams, onCreate, onDeleteMultiple, setSelectedRows, fetchData, rowKey = "id" }) => {
   const rowSelection = {
     onChange: (selectedRowKeys, selectedRows) => {
       setSelectedRows(selectedRows)
@@ -36,7 +36,7 @@ const TableCustom = ({ title, columns = [], loading, data, tableParams, onCreate
         <Table
           rowSelection={Object.assign(rowSelection)}
           columns={columns}
-          rowKey={(record) => record.staffId}
+          rowKey={rowKey}
           dataSource={data}
           pagination={tableParams.pagination}
           loading={loading}

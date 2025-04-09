@@ -2,13 +2,17 @@ import React, { useState, useEffect } from 'react';
 import Notification from '../components/Notification';
 import Modal from '../components/Modal';
 import Table from '../components/Table';
-import { Form, Tooltip, Button, Input, Upload, Select } from 'antd';
-import { getStudents, createStudent } from '../services/api';
+//import { Button, Form, Space, Tooltip, Input, Upload, Select } from 'antd';
 import { EditOutlined, DeleteOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
+import { Form, Tooltip, Button, Input, Upload, Select } from 'antd';
+import { getStudents, createStudent, deleteStudents, updateStudent } from '../services/api';
+
 
 const StudentPage = () => {
 	const [showModalCreate, setShowModalCreate] = useState(false);
+	const [showModal, setShowModal] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [createLoading, setCreateLoading] = useState(false);
 	const [notification, setNotification] = useState({ type: null, message: null, desc: null });
 	const [data, setData] = useState([]);
 	const [tableParams, setTableParams] = useState({
@@ -50,32 +54,105 @@ const StudentPage = () => {
 		try {
 			const result = await createStudent(values);
 			if (result.status === 201 || result.status === 200) {
-        fetchData();
-        setNotification({ type: 'success', message: 'Thành công', desc: 'Thêm mới thành công' });
-        setShowModalCreate(false);
-      } else {
-        setNotification({ type: 'error', message: 'Thất bại', desc: result?.message || 'Có lỗi xảy ra' });
-      }
+				fetchData();
+				setNotification({ type: 'success', message: 'Thành công', desc: 'Thêm mới thành công' });
+				setShowModalCreate(false);
+			} else {
+				setNotification({ type: 'error', message: 'Thất bại', desc: result?.message || 'Có lỗi xảy ra' });
+			}
 		} catch (error) {
 			setNotification({ type: 'error', message: 'Thất bại!', desc: error.message });
 		} finally {
 			setLoading(false);
 			setTimeout(() => {
-        setNotification({ type: null, message: null, desc: null });
-      }, 3000);
+				setNotification({ type: null, message: null, desc: null });
+			}, 3000);
 		}
 	}
 
 	useEffect(() => { fetchData(); }, []);
 
-	const handleEdit = (record) => {
+	const fillData = (record) => {
+		form.setFieldsValue({
+		  studentId: record.studentId,
+		  fullName: record.fullName,
+		  address: record.address,
+		  phone: record.phone,
+		  email: record.email,
+		  departmentIds: record.departments?.map(dep => dep.id) || [],
+		});
+	  }
+
+	const update = async (record) => {
+		try {
+			const result = await updateStudent(record.studentId, record);
+			if (result.status === 200) {
+				fetchData();
+				setNotification({ type: 'success', message: 'Thành công', desc: 'Cập nhật thông tin thành công' });
+				setShowModalUpdate(false);
+			} else {
+				setNotification({ type: 'error', message: 'Thất bại', desc: result?.message || null });
+			}
+		} catch (error) {
+			setNotification({ type: 'error', message: 'Thất bại', desc: 'Không thể cập nhật thông tin của sinh viên này' });
+		} finally {
+			setTimeout(() => {
+				setNotification({ type: null, message: null, desc: null });
+			}, 3000);
+		}
 	}
 
-	const handleDelete = (record) => {
-	}
+	const deleteStudent = async (record) => {
+		setLoading(true);
+		try {
+			const result = await deleteStudents({ ids: [record.studentId] });
+			if (result.status === 200) {
+				fetchData();
+				setNotification({ type: 'success', message: 'Thành công', desc: 'Xóa thành công' });
+			} else {
+				setNotification({ type: 'error', message: 'Thất bại', desc: result?.message || null });
+			}
+		} catch (error) {
+			setNotification({ type: 'error', message: 'Thất bại', desc: 'Không thể xóa sinh viên này' });
+		} finally {
+			setLoading(false);
+			setShowModalDelete(false);
+			setTimeout(() => {
+				setNotification({ type: null, message: null, desc: null });
+			}, 3000);
+		}
+	};
+
+
+
+
+
+	const deleteMultipleStudents = async () => {
+		setLoading(true);
+		try {
+			const ids = selectedRows.map(row => row.studentId);
+			const result = await deleteStudents({ ids: ids });
+			if (result.status === 200) {
+				fetchData();
+				setNotification({ type: 'success', message: 'Thành công', desc: `Đã xóa ${ids.length} bản ghi thành công` });
+				setShowModal(false);
+				setSelectedRows([]);
+			} else {
+				setNotification({ type: 'error', message: 'Thất bại', desc: result?.message || 'Có lỗi xảy ra' });
+			}
+		} catch (error) {
+			setNotification({ type: 'error', message: 'Thất bại', desc: 'Không thể xóa các bản ghi đã chọn' });
+		} finally {
+			setLoading(false);
+		}
+	};
+
+
 
 	const handleView = (record) => {
-	}
+		console.log("Xem:", record);
+		// Thực hiện logic xem chi tiết tại đây
+	};
 
 	const columns = [{
 		title: '',
@@ -232,9 +309,80 @@ const StudentPage = () => {
 		});
 	}
 
-	const handleDeleteMultiple = () => {
-
+	const handleEdit = (record) => {
+		setShowModalUpdate(true);
+		fillData(record);
+		setModal({
+			...modal,
+			title: `Cập nhật thông tin sinh viên`,
+			form: form,
+			formContent: getFormContent(update),
+			footer: [
+				<Button key="cancle" onClick={() => setShowModalUpdate(false)}>Hủy</Button>,
+				<Button key="submit" loading={createLoading} onClick={() => form.submit()}
+					className='!text-white !bg-[#1890ff] !border-[#1890ff] hover:!bg-[#40a9ff] hover:!border-[#40a9ff]'
+				>Lưu
+				</Button>
+			],
+			onOk: () => form.submit(),
+			onCancel: () => setShowModalUpdate(false),
+			onClose: () => setShowModalUpdate(false),
+		});
 	}
+
+	const handleDelete = async (record) => {
+		setShowModalDelete(true);
+		setModal({
+			title: `Xóa thông tin sinh viên`,
+			showModal: showModalDelete,
+			formContent: (
+				<div>
+					<p>Bạn có chắc chắn muốn xóa thông tin sinh viên này không?</p>
+					<p><strong>{record.fullName}</strong></p>
+				</div>
+			),
+			footer: [
+				<Button key="cancle" onClick={() => setShowModalDelete(false)}>
+					Hủy
+				</Button>,
+				<Button type="primary"
+					className="!text-white !bg-[#ff4d4f] !border-[#ff4d4f] hover:!bg-[#ff7875] hover:!border-[#ff7875]"
+					onClick={() => deleteStudent(record)}
+				>Xóa</Button>
+			],
+			onOk: () => deleteStudent(record),
+			onCancel: () => setShowModalDelete(false),
+			onClose: () => setShowModalDelete(false)
+		})
+	}
+
+	const handleDeleteMultiple = () => {
+		if (selectedRows.length === 0) {
+			setNotification({ type: 'warning', message: 'Cảnh báo', desc: 'Vui lòng chọn ít nhất một bản ghi để xóa!' });
+			return;
+		}
+
+		setModal({
+			title: `Xóa thông tin sinh viên`,
+			formContent: (
+				<div>
+					<p>Bạn có chắc chắn muốn xóa {selectedRows.length} bản ghi đã chọn không?</p>
+				</div>
+			),
+			footer: [
+				<Button key="cancel" onClick={() => setShowModalDelete(false)}>Hủy</Button>,
+				<Button
+					key="delete"
+					type="primary"
+					danger
+					onClick={deleteMultipleStudents}
+				>Xóa
+				</Button>,
+			],
+			onCancel: () => setShowModalDelete(false),
+		});
+		setShowModal(true);
+	};
 
 	return (
 		<>
@@ -251,7 +399,8 @@ const StudentPage = () => {
 				onCreate={handleCreate}
 				onDeleteMultiple={handleDeleteMultiple}
 				setSelectedRows={setSelectedRows}
-				fetchData={fetchData} />
+				fetchData={fetchData}
+				rowKey="studentId" />
 		</>
 	);
 };
