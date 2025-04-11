@@ -6,6 +6,7 @@ import Table from '../components/Table';
 import { EditOutlined, DeleteOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
 import { Form, Tooltip, Button, Input, Upload, Select } from 'antd';
 import { getStudents, createStudent, deleteStudents, updateStudent } from '../services/api';
+import DepartmentSelect from '../components/DepartmentSelect';
 
 
 const StudentPage = () => {
@@ -23,6 +24,7 @@ const StudentPage = () => {
 	});
 	const [showModalDelete, setShowModalDelete] = useState(false);
 	const [showModalUpdate, setShowModalUpdate] = useState(false);
+	const [showModalView, setShowModalView] = useState(false);
 	const [form] = Form.useForm();
 	const [modal, setModal] = useState({
 		"title": null,
@@ -52,7 +54,19 @@ const StudentPage = () => {
 	const create = async (values) => {
 		setLoading(true);
 		try {
-			const result = await createStudent(values);
+			// Format the data to match the API structure
+			const formattedData = {
+				studentId: values.studentId,
+				fullName: values.fullName,
+				address: values.address,
+				phone: values.phone,
+				email: values.email,
+				userId: values.userId,
+				photo: values.photo,
+				departmentId: values.department
+			};
+			
+			const result = await createStudent(formattedData);
 			if (result.status === 201 || result.status === 200) {
 				fetchData();
 				setNotification({ type: 'success', message: 'Thành công', desc: 'Thêm mới thành công' });
@@ -74,18 +88,34 @@ const StudentPage = () => {
 
 	const fillData = (record) => {
 		form.setFieldsValue({
-		  studentId: record.studentId,
-		  fullName: record.fullName,
-		  address: record.address,
-		  phone: record.phone,
-		  email: record.email,
-		  departmentIds: record.departments?.map(dep => dep.id) || [],
+			studentId: record.studentId,
+			fullName: record.fullName,
+			address: record.address,
+			phone: record.phone,
+			email: record.email,
+			userId: record.userId,
+			department: record.department?.code
 		});
-	  }
+	}
 
-	const update = async (record) => {
+	const update = async (values) => {
+		setLoading(true);
+		console.log("Update function called with values:", values);
 		try {
-			const result = await updateStudent(record.studentId, record);
+			// Format the data to match the API structure
+			const formattedData = {
+				studentId: values.studentId,
+				fullName: values.fullName,
+				address: values.address,
+				phone: values.phone,
+				email: values.email,
+				userId: values.userId,
+				photo: values.photo,
+				departmentId: values.department
+			};
+			console.log("formattedData student update", formattedData);
+			const result = await updateStudent(values.studentId, formattedData);
+			console.log("Update result:", result);
 			if (result.status === 200) {
 				fetchData();
 				setNotification({ type: 'success', message: 'Thành công', desc: 'Cập nhật thông tin thành công' });
@@ -94,8 +124,10 @@ const StudentPage = () => {
 				setNotification({ type: 'error', message: 'Thất bại', desc: result?.message || null });
 			}
 		} catch (error) {
+			console.error("Error updating student:", error);
 			setNotification({ type: 'error', message: 'Thất bại', desc: 'Không thể cập nhật thông tin của sinh viên này' });
 		} finally {
+			setLoading(false);
 			setTimeout(() => {
 				setNotification({ type: null, message: null, desc: null });
 			}, 3000);
@@ -123,10 +155,6 @@ const StudentPage = () => {
 		}
 	};
 
-
-
-
-
 	const deleteMultipleStudents = async () => {
 		setLoading(true);
 		try {
@@ -147,11 +175,55 @@ const StudentPage = () => {
 		}
 	};
 
-
-
 	const handleView = (record) => {
-		console.log("Xem:", record);
-		// Thực hiện logic xem chi tiết tại đây
+		setShowModalView(true);
+		setModal({
+			title: `Chi tiết sinh viên`,
+			formContent: (
+				<div className="space-y-4">
+					<div className="flex items-center space-x-4">
+						<img
+							src={record.photoBase64 ? `data:image/png;base64,${record.photoBase64}` : `/avatar.png`}
+							alt="avatar"
+							className="w-24 h-24 rounded-full object-cover"
+						/>
+						<div>
+							<h3 className="text-lg font-semibold">{record.fullName}</h3>
+							<p className="text-gray-600">Mã sinh viên: {record.studentId}</p>
+						</div>
+					</div>
+					<div className="grid grid-cols-2 gap-4">
+						<div>
+							<p className="font-medium">Email:</p>
+							<p>{record.email}</p>
+						</div>
+						<div>
+							<p className="font-medium">Số điện thoại:</p>
+							<p>{record.phone}</p>
+						</div>
+						<div>
+							<p className="font-medium">Địa chỉ:</p>
+							<p>{record.address || "Chưa cập nhật"}</p>
+						</div>
+						<div>
+							<p className="font-medium">User ID:</p>
+							<p>{record.userId || "Chưa cập nhật"}</p>
+						</div>
+						<div>
+							<p className="font-medium">Đơn vị:</p>
+							<p>{record.department?.name || "Chưa cập nhật"}</p>
+						</div>
+					</div>
+				</div>
+			),
+			footer: [
+				<Button key="close" onClick={() => setShowModalView(false)}>
+					Đóng
+				</Button>
+			],
+			onCancel: () => setShowModalView(false),
+			onClose: () => setShowModalView(false)
+		});
 	};
 
 	const columns = [{
@@ -232,75 +304,88 @@ const StudentPage = () => {
 	},
 	];
 
-	const getFormContent = (onFinish) => (
-		<Form form={form} layout="vertical" onFinish={onFinish}
-			initialValues={{
-				studentId: '',
-				fullName: '',
-				address: '',
-				phone: '',
-				email: '',
-				department: '',
+	const getFormContent = (onFinish) => {
+		return (
+			<Form form={form} layout="vertical" onFinish={(values) => {
+				onFinish(values);
 			}}
-		>
-			<Form.Item label="Mã sinh viên" name="studentId"
-				rules={[{ required: true, message: 'Vui lòng nhập mã sinh viên!' }]}
-			><Input />
-			</Form.Item>
-
-			<Form.Item label="Họ và tên" name="fullName"
-				rules={[{ required: true, message: 'Vui lòng nhập họ và tên!' }]}
-			><Input />
-			</Form.Item>
-
-			<Form.Item label="Địa chỉ" name="address"><Input /></Form.Item>
-
-			<Form.Item label="Số điện thoại" name="phone"
-				rules={[{ required: true, message: 'Vui lòng nhập số điện thoại!' }]}
-			><Input />
-			</Form.Item>
-
-			<Form.Item label="Email" name="email"
-				rules={[
-					{ required: true, message: 'Vui lòng nhập email!' },
-					{ type: 'email', message: 'Email không hợp lệ!' }
-				]}
-			><Input />
-			</Form.Item>
-			<Form.Item label="Ảnh" name="photo" valuePropName="fileList"
-				getValueFromEvent={(e) => e?.fileList}
+				initialValues={{
+					studentId: '',
+					fullName: '',
+					address: '',
+					phone: '',
+					email: '',
+					userId: '',
+				}}
 			>
-				<Upload action="/upload.do" listType="picture" maxCount={1} showUploadList={false}>
-					<Button icon={<UploadOutlined />}>Tải ảnh lên</Button>
-				</Upload>
-			</Form.Item>
+				<Form.Item label="Mã sinh viên" name="studentId"
+					rules={[{ required: true, message: 'Vui lòng nhập mã sinh viên!' }]}
+				><Input />
+				</Form.Item>
 
-			<Form.Item label="Đơn vị" name="departmentIds"
-				rules={[{ required: true, message: 'Vui lòng chọn đơn vị!' }]}
-			>
-				<Select placeholder="Chọn đơn vị"
-					options={[
-						{ label: 'Phòng IT', value: 'IT' },
-						{ label: 'Phòng HR', value: 'HR' },
-						{ label: 'Phòng Marketing', value: 'Marketing' },
+				<Form.Item label="Họ và tên" name="fullName"
+					rules={[{ required: true, message: 'Vui lòng nhập họ và tên!' }]}
+				><Input />
+				</Form.Item>
+
+				<Form.Item label="Địa chỉ" name="address"><Input /></Form.Item>
+
+				<Form.Item label="Số điện thoại" name="phone"
+					rules={[{ required: true, message: 'Vui lòng nhập số điện thoại!' }]}
+				><Input />
+				</Form.Item>
+
+				<Form.Item label="Email" name="email"
+					rules={[
+						{ required: true, message: 'Vui lòng nhập email!' },
+						{ type: 'email', message: 'Email không hợp lệ!' }
 					]}
-				/>
-			</Form.Item>
-		</Form>
-	)
+				><Input />
+				</Form.Item>
+
+				<Form.Item label="User ID" name="userId">
+					<Input />
+				</Form.Item>
+
+				<Form.Item label="Ảnh" name="photo" valuePropName="fileList"
+					getValueFromEvent={(e) => e?.fileList}
+				>
+					<Upload action="/upload.do" listType="picture" maxCount={1} showUploadList={false}>
+						<Button icon={<UploadOutlined />}>Tải ảnh lên</Button>
+					</Upload>
+				</Form.Item>
+
+				<Form.Item label="Đơn vị" name="department"
+					rules={[{ required: true, message: 'Vui lòng chọn đơn vị!' }]}
+				>
+					<DepartmentSelect />
+				</Form.Item>
+			</Form>
+		);
+	}
 
 	const handleCreate = () => {
+		form.resetFields();
 		setShowModalCreate(true);
 		setModal({
 			...modal,
 			title: "Thêm mới sinh viên",
 			onOk: () => form.submit(),
-			onCancel: () => setShowModalCreate(false),
-			onClose: () => setShowModalCreate(false),
+			onCancel: () => {
+				setShowModalCreate(false);
+				form.resetFields();
+			},
+			onClose: () => {
+				setShowModalCreate(false);
+				form.resetFields();
+			},
 			form: form,
 			formContent: getFormContent(create),
 			footer: [
-				<Button key="cancle" onClick={() => setShowModalCreate(false)}>Hủy</Button>,
+				<Button key="cancle" onClick={() => {
+					setShowModalCreate(false);
+					form.resetFields();
+				}}>Hủy</Button>,
 				<Button key="submit" loading={loading} onClick={() => form.submit()}
 					className='!text-white !bg-[#1890ff] !border-[#1890ff] hover:!bg-[#40a9ff] hover:!border-[#40a9ff]'
 				>Ok
@@ -312,19 +397,30 @@ const StudentPage = () => {
 	const handleEdit = (record) => {
 		setShowModalUpdate(true);
 		fillData(record);
+		
+		// Create a wrapper function to ensure update is called with the form values
+		const handleUpdate = (values) => {
+			console.log("handleUpdate called with values:", values);
+			update(values);
+		};
+		
 		setModal({
 			...modal,
 			title: `Cập nhật thông tin sinh viên`,
 			form: form,
-			formContent: getFormContent(update),
+			formContent: getFormContent(handleUpdate),
 			footer: [
 				<Button key="cancle" onClick={() => setShowModalUpdate(false)}>Hủy</Button>,
-				<Button key="submit" loading={createLoading} onClick={() => form.submit()}
+				<Button key="submit" loading={createLoading} onClick={() => {
+					form.submit();
+				}}
 					className='!text-white !bg-[#1890ff] !border-[#1890ff] hover:!bg-[#40a9ff] hover:!border-[#40a9ff]'
 				>Lưu
 				</Button>
 			],
-			onOk: () => form.submit(),
+			onOk: () => {
+				form.submit();
+			},
 			onCancel: () => setShowModalUpdate(false),
 			onClose: () => setShowModalUpdate(false),
 		});
@@ -342,7 +438,10 @@ const StudentPage = () => {
 				</div>
 			),
 			footer: [
-				<Button key="cancle" onClick={() => setShowModalDelete(false)}>
+				<Button key="cancle" onClick={() => {
+					setShowModalDelete(false);
+					form.resetFields();
+				}}>
 					Hủy
 				</Button>,
 				<Button type="primary"
@@ -351,8 +450,14 @@ const StudentPage = () => {
 				>Xóa</Button>
 			],
 			onOk: () => deleteStudent(record),
-			onCancel: () => setShowModalDelete(false),
-			onClose: () => setShowModalDelete(false)
+			onCancel: () => {
+				setShowModalDelete(false);
+				form.resetFields();
+			},
+			onClose: () => {
+				setShowModalDelete(false);
+				form.resetFields();
+			}
 		})
 	}
 
@@ -362,6 +467,7 @@ const StudentPage = () => {
 			return;
 		}
 
+		setShowModalDelete(true);
 		setModal({
 			title: `Xóa thông tin sinh viên`,
 			formContent: (
@@ -380,8 +486,8 @@ const StudentPage = () => {
 				</Button>,
 			],
 			onCancel: () => setShowModalDelete(false),
+			onClose: () => setShowModalDelete(false)
 		});
-		setShowModal(true);
 	};
 
 	return (
@@ -390,6 +496,7 @@ const StudentPage = () => {
 			<Modal showModal={showModalCreate} modal={modal} />
 			<Modal showModal={showModalDelete} modal={modal} />
 			<Modal showModal={showModalUpdate} modal={modal} />
+			<Modal showModal={showModalView} modal={modal} />
 			<Table
 				title={'sinh viên'}
 				columns={columns}

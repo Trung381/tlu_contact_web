@@ -2,24 +2,22 @@
 import axios from 'axios';
 
 // const baseURL = process.env.BASE_URL || 'http://localhost:8080';
-const baseURL = 'https://tlu-contact-1-0-0.onrender.com'; // Địa chỉ API của bạn
-const token = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjcxMTE1MjM1YTZjNjE0NTRlZmRlZGM0NWE3N2U0MzUxMzY3ZWViZTAiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vdGx1LWNvbnRhY3QtYzBjNjkiLCJhdWQiOiJ0bHUtY29udGFjdC1jMGM2OSIsImF1dGhfdGltZSI6MTc0NDIwNjQzOCwidXNlcl9pZCI6ImprQTJFWkZXYjJXNGsweDNEQVlWVmZhUDc2TjIiLCJzdWIiOiJqa0EyRVpGV2IyVzRrMHgzREFZVlZmYVA3Nk4yIiwiaWF0IjoxNzQ0MjA2NDM4LCJleHAiOjE3NDQyMTAwMzgsImVtYWlsIjoiMjI1MTE3MjM2N0BlLnRsdS5lZHUudm4iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyIyMjUxMTcyMzY3QGUudGx1LmVkdS52biJdfSwic2lnbl9pbl9wcm92aWRlciI6InBhc3N3b3JkIn19.VdiE0pihV7iuZ2eI8F5W-4t7WS3n0Uie_oHgNzzTHFWFPyMdeDqo2Dv5-GdgqLT558J1zSzKj4Kb6eVCDhG1o6hdc05Q1gBlS078HScIeSnnWRzm-bkZcJHlwi9n9Y14P_Of1YpzJtHl3FTd2rnm91oFDHnl3RGJN6qObLwcI07vVCj9xi5VFRRYjUIZ0uCrRKxv7x-7EIvBK1s1iK9f8vAS3E-20m0ub-0AhwLVVgdlfRHObwtySKQRUZDoq8q1y-Gm38XrM7iv1wf-CVv9OqwtvVbbHBl99B7o6vQVtznj0-05Mlwp81d8F8IgxpDOzRBUwfC4gvOKXv4487zs0Q"
+const baseURL = 'https://tlu-contact-1-0-0.onrender.com';
 
 // Cấu hình axios instance
 const apiClient = axios.create({
   baseURL: baseURL,
   headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
+    'Content-Type': 'application/json'
   }
 });
 
 // Xử lý interceptor cho request
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const idToken = localStorage.getItem('idToken');
+    if (idToken) {
+      config.headers.Authorization = `Bearer ${idToken}`;
     }
     if (config.data instanceof FormData) {
       config.headers['Content-Type'] = 'multipart/form-data';
@@ -36,7 +34,10 @@ apiClient.interceptors.response.use(
     // Xử lý lỗi response
     if (error.response && error.response.status === 401) {
       // Xử lý lỗi 401 Unauthorized
-      localStorage.removeItem('token');
+      localStorage.removeItem('idToken');
+      localStorage.removeItem('localId');
+      localStorage.removeItem('email');
+      localStorage.removeItem('refreshToken');
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -69,8 +70,11 @@ let getStaffs = async (page = 0, size = 20, sort = false, search = null, deleted
       throw new Error('Failed to fetch data');
     }
     console.log('Data fetched successfully:', response.data);
-    return response.data.data.content;
-
+    return {
+      data: response.data.data,
+      total: response.data.total_record,
+      currentPage: response.data.current_page
+    };
   } catch (error) {
     throw error.response.data;
   }
@@ -157,10 +161,10 @@ let deleteStudents = async (ids) => {
 }
 
 
-let getDepartments = async (page = 0, size = 20, search = null, deleted = false) => {
+let getDepartments = async (page = 0, size = 20, search = null, deleted = false, filterId = null) => {
   try {
     const response = await apiClient.get('/api/v1/departments', {
-      params: { page, size, search, deleted },
+      params: { page, size, search, deleted, filterId },
     });
 
     const resData = response.data?.data || [];
@@ -182,7 +186,7 @@ let getDepartments = async (page = 0, size = 20, search = null, deleted = false)
 
 let createDepartments = async (data) => {
   try {
-    const response = await apiClient.post('/api/v1/departments/create', data);
+    const response = await apiClient.post('/api/v1/department/create', data);
     return response;
   } catch (error) {
     return error.response.data;
@@ -192,7 +196,7 @@ let createDepartments = async (data) => {
 
 let updateDepartments = async (id, data) => {
   try {
-    const response = await apiClient.post(`/api/v1/departments/update/${id}`, data);
+    const response = await apiClient.post(`/api/v1/department/update/${id}`, data);
     return response;
   } catch (error) {
     return error.response.data;
@@ -201,7 +205,7 @@ let updateDepartments = async (id, data) => {
 
 let deleteDepartments = async (ids) => {
   try {
-    const response = await apiClient.post(`/api/v1/departments/delete`, ids);
+    const response = await apiClient.post(`/api/v1/department/delete`, ids);
     console.log('Response:', response);
     return response;
   } catch (error) {
@@ -209,7 +213,31 @@ let deleteDepartments = async (ids) => {
   }
 }
 
+let getDepartmentTypes = async () => {
+  try {
+    const response = await apiClient.get('/api/v1/department-types');
+    return response.data;
+  } catch (error) {
+    console.error("getDepartmentTypes error:", error);
+    throw error.response?.data || { message: 'Server error' };
+  }
+};
+
+// Get child departments by parent ID
+export const getChildDepartments = async (parentId) => {
+  try {
+    const response = await apiClient.get(`/api/v1/department-types/filter`, {
+      params: { parentId }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching child departments:', error);
+    throw error;
+  }
+};
+
 export {
   apiClient, getStaffs, getStaffById, createStaff, updateStaff, deleteStaffs, login,
-  getStudents, createStudent, updateStudent, deleteStudents, getDepartments, createDepartments, updateDepartments,deleteDepartments
+  getStudents, createStudent, updateStudent, deleteStudents, getDepartments, createDepartments, updateDepartments, deleteDepartments,
+  getDepartmentTypes
 };
