@@ -18,6 +18,7 @@ const MainLayout = () => {
             <ul className="menu menu-horizontal px-1">
               <li><NavLink to={routes.home} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Trang chủ</NavLink></li>
               <li><NavLink to={routes.department} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Danh bạ đơn vị</NavLink></li>
+              <li><NavLink to={routes.departmentType} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Loại phòng ban</NavLink></li>
               <li><NavLink to={routes.staff} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Danh bạ CBGV</NavLink></li>
               <li><NavLink to={routes.student} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Danh bạ sinh viên</NavLink></li>
               {isAuthenticated ? (

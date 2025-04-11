@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Link } from 'react-router-dom';
-import { login } from "../services/api"; // Import hàm login từ file API
 import { useNavigate } from "react-router-dom";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
 import logoTLU from '../assets/images/logo-tlu.png';
+import authService from '../services/authService';
+
 const LoginPage = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -16,13 +17,14 @@ const LoginPage = () => {
         setError(null); // Xóa lỗi cũ nếu có
 
         try {
-            // if (data.role !== "admin") {
-            //     setError("Bạn không có quyền truy cập. Chỉ admin được đăng nhập.");
-            //     return;
-            //   }
-            const data = await login(email, password);
-            localStorage.setItem("token", data.token); // Lưu token vào localStorage
-            navigate("/dashboard"); // Điều hướng sau khi đăng nhập thành công
+            const result = await authService.login(email, password);
+            
+            if (result.success) {
+                // Chuyển hướng về trang chủ
+                navigate("/");
+            } else {
+                setError(result.error);
+            }
         } catch (err) {
             setError(err.message || "Đăng nhập thất bại. Vui lòng thử lại.");
         }
