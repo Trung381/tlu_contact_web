@@ -64,7 +64,9 @@ let login = async (email, password) => {
  */
 let getStaffs = async (page = 0, size = 20, sort = false, search = null, deleted = false) => {
   try {
-    const response = await apiClient.get('/api/v1/staff');
+    const response = await apiClient.get('/api/v1/staff', {
+      params: { page, size, sort, search, deleted }
+    });
     if (response.status !== 200) {
       console.error('Error fetching data:', response.statusText);
       throw new Error('Failed to fetch data');
@@ -120,17 +122,25 @@ let deleteStaffs = async (ids) => {
   }
 }
 
-let getStudents = async (page = 0, size = 20, sort = true, search = null, deleted = false) => {
+let getStudents = async (page = 0, size = 20, sort = false, search = null, deleted = false) => {
   try {
     const response = await apiClient.get('/api/v1/students', {
       params: { page, size, sort, search, deleted }
     });
-    console.log('Response:', response.data);
-    return response.data.data;
+    if (response.status !== 200) {
+      console.error('Error fetching data:', response.statusText);
+      throw new Error('Failed to fetch data');
+    }
+    console.log('Students data fetched successfully:', response.data);
+    return {
+      data: response.data.data,
+      total: response.data.total_record,
+      currentPage: response.data.current_page
+    };
   } catch (error) {
     throw error.response.data;
   }
-}
+};
 
 let createStudent = async (data) => {
   try {
@@ -166,13 +176,15 @@ let getDepartments = async (page = 0, size = 20, search = null, deleted = false,
     const response = await apiClient.get('/api/v1/departments', {
       params: { page, size, search, deleted, filterId },
     });
-
-    const resData = response.data?.data || [];
-    const total = response.data?.total || resData.length;
-
+    if (response.status !== 200) {
+      console.error('Error fetching data:', response.statusText);
+      throw new Error('Failed to fetch data');
+    }
+    console.log('Departments data fetched successfully:', response.data);
     return {
-      content: resData,
-      total,
+      data: response.data.data,
+      total: response.data.total_record,
+      currentPage: response.data.current_page
     };
   } catch (error) {
     console.error("getDepartments error:", error);
@@ -232,6 +244,47 @@ export const getChildDepartments = async (parentId) => {
     return response.data;
   } catch (error) {
     console.error('Error fetching child departments:', error);
+    throw error;
+  }
+};
+
+// Department Type APIs
+export const getAllDepartmentTypes = async () => {
+  try {
+    const response = await apiClient.get('/api/v1/department-types');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching department types:', error);
+    throw error;
+  }
+};
+
+export const createDepartmentType = async (data) => {
+  try {
+    const response = await apiClient.post('/api/v1/department-types/create', data);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating department type:', error);
+    throw error;
+  }
+};
+
+export const updateDepartmentType = async (id, data) => {
+  try {
+    const response = await apiClient.post(`/api/v1/department-types/update/${id}`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating department type:', error);
+    throw error;
+  }
+};
+
+export const deleteDepartmentTypes = async (data) => {
+  try {
+    const response = await apiClient.post('/api/v1/department-types/delete', data);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting department types:', error);
     throw error;
   }
 };

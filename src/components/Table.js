@@ -21,7 +21,7 @@ const getRandomuserParams = params => {
   );
 };
 
-const TableCustom = ({ title, columns = [], loading, data, tableParams, onCreate, onDeleteMultiple, setSelectedRows, fetchData, rowKey = "id" }) => {
+const TableCustom = ({ title, columns = [], loading, data, tableParams, onCreate, onDeleteMultiple, setSelectedRows, fetchData, onChange, rowKey = "id" }) => {
   const rowSelection = {
     onChange: (selectedRowKeys, selectedRows) => {
       setSelectedRows(selectedRows)
@@ -40,6 +40,7 @@ const TableCustom = ({ title, columns = [], loading, data, tableParams, onCreate
           dataSource={data}
           pagination={tableParams.pagination}
           loading={loading}
+          onChange={onChange}
           scroll={{ x: 'max-content' }}
           title={() => (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f0f0f0', marginBottom: 8, paddingBottom: 8 }}>

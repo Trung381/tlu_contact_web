@@ -3,6 +3,7 @@ import { getStaffs, getStaffById, createStaff, updateStaff, deleteStaffs } from 
 import Table from "../components/Table";
 import Modal from "../components/Modal";
 import Notification from "../components/Notification";
+import SearchInput from "../components/SearchInput";
 import { Button, Form, Space, Tooltip, Input, Upload, Select } from 'antd';
 import { EditOutlined, DeleteOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
 import DepartmentSelect from '../components/DepartmentSelect';
@@ -34,17 +35,24 @@ const StaffPage = () => {
     "footer": null
   });
   const [selectedRows, setSelectedRows] = useState([]);
+  const [searchText, setSearchText] = useState("");
 
-  const fetchData = async () => {
+  const fetchData = async (params = tableParams) => {
     setLoading(true);
     try {
-      const result = await getStaffs();
+      const result = await getStaffs(
+        params.pagination.current - 1,
+        params.pagination.pageSize,
+        false,
+        searchText,
+        false
+      );
       console.log("staff result", result);
       setData(result.data);
-      setLoading(false);
       setTableParams({
+        ...params,
         pagination: {
-          ...tableParams.pagination,
+          ...params.pagination,
           total: result.total,
           current: result.currentPage + 1,
         },
@@ -55,11 +63,25 @@ const StaffPage = () => {
         message: 'Lỗi tải dữ liệu',
         desc: error.message || 'Có lỗi xảy ra khi lấy dữ liệu',
       });
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  const handleTableChange = (pagination, filters, sorter) => {
+    setTableParams({
+      pagination,
+      filters,
+      ...sorter,
+    });
+    fetchData({
+      pagination,
+      filters,
+      ...sorter,
+    });
+  };
 
   const handleView = (record) => {
     setShowModalView(true);
@@ -477,8 +499,33 @@ const StaffPage = () => {
     setShowModal(true);
   };
 
+  const handleSearch = (value) => {
+    setSearchText(value);
+    setTableParams({
+      ...tableParams,
+      pagination: {
+        ...tableParams.pagination,
+        current: 1, // Reset to first page when searching
+      },
+    });
+    fetchData({
+      ...tableParams,
+      pagination: {
+        ...tableParams.pagination,
+        current: 1,
+      },
+    });
+  };
+
   return (
     <>
+      <div className="mb-4 flex justify-between items-center">
+        <SearchInput
+          onSearch={handleSearch}
+          placeholder="Tìm kiếm CBGV..."
+          loading={loading}
+        />
+      </div>
       <Notification noti={notification} />
       <Modal showModal={showModal} modal={modal} />
       <Modal showModal={showModalDelete} modal={modal} />
@@ -494,6 +541,7 @@ const StaffPage = () => {
         onDeleteMultiple={handleDeleteMultiple} 
         setSelectedRows={setSelectedRows}
         fetchData={fetchData}
+        onChange={handleTableChange}
         rowKey="staffId"/>
     </>
   );

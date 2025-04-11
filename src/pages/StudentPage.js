@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Notification from '../components/Notification';
 import Modal from '../components/Modal';
 import Table from '../components/Table';
+import SearchInput from '../components/SearchInput';
 //import { Button, Form, Space, Tooltip, Input, Upload, Select } from 'antd';
 import { EditOutlined, DeleteOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
 import { Form, Tooltip, Button, Input, Upload, Select } from 'antd';
@@ -37,18 +38,38 @@ const StudentPage = () => {
 		"footer": null
 	});
 	const [selectedRows, setSelectedRows] = useState([]);
+	const [searchText, setSearchText] = useState("");
 
-	const fetchData = async () => {
+	const fetchData = async (params = tableParams) => {
 		setLoading(true);
-		const result = await getStudents();
-		setData(result)
-		setLoading(false);
-		setTableParams({
-			pagination: {
-				...tableParams.pagination,
-				total: result.length,
-			},
-		});
+		try {
+			const result = await getStudents(
+				params.pagination.current - 1,
+				params.pagination.pageSize,
+				false,
+				searchText,
+				false
+			);
+			console.log("student result", result);
+			setData(result.data);
+			setTableParams({
+				...params,
+				pagination: {
+					...params.pagination,
+					total: result.total,
+					current: result.currentPage + 1,
+				},
+			});
+		} catch (error) {
+			console.error('Lỗi khi gọi getStudents:', error);
+			setNotification({
+				type: 'error',
+				message: 'Lỗi tải dữ liệu',
+				desc: error.message || 'Có lỗi xảy ra khi lấy dữ liệu',
+			});
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	const create = async (values) => {
@@ -85,6 +106,19 @@ const StudentPage = () => {
 	}
 
 	useEffect(() => { fetchData(); }, []);
+
+	const handleTableChange = (pagination, filters, sorter) => {
+		setTableParams({
+			pagination,
+			filters,
+			...sorter,
+		});
+		fetchData({
+			pagination,
+			filters,
+			...sorter,
+		});
+	};
 
 	const fillData = (record) => {
 		form.setFieldsValue({
@@ -490,8 +524,33 @@ const StudentPage = () => {
 		});
 	};
 
+	const handleSearch = (value) => {
+		setSearchText(value);
+		setTableParams({
+			...tableParams,
+			pagination: {
+				...tableParams.pagination,
+				current: 1, // Reset to first page when searching
+			},
+		});
+		fetchData({
+			...tableParams,
+			pagination: {
+				...tableParams.pagination,
+				current: 1,
+			},
+		});
+	};
+
 	return (
 		<>
+			<div className="mb-4 flex justify-between items-center">
+				<SearchInput
+					onSearch={handleSearch}
+					placeholder="Tìm kiếm sinh viên..."
+					loading={loading}
+				/>
+			</div>
 			<Notification noti={notification} />
 			<Modal showModal={showModalCreate} modal={modal} />
 			<Modal showModal={showModalDelete} modal={modal} />
@@ -507,6 +566,7 @@ const StudentPage = () => {
 				onDeleteMultiple={handleDeleteMultiple}
 				setSelectedRows={setSelectedRows}
 				fetchData={fetchData}
+				onChange={handleTableChange}
 				rowKey="studentId" />
 		</>
 	);

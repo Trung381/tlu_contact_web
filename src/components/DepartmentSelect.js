@@ -11,7 +11,8 @@ const DepartmentSelect = ({ value, onChange, placeholder = "Chọn đơn vị", 
       setLoading(true);
       try {
         const result = await getDepartments(0, 100, null, false);
-        const formattedDepartments = result.content.map(dept => ({
+        console.log("Department select data:", result);
+        const formattedDepartments = result.data.map(dept => ({
           label: dept.name,
           value: dept.code
         }));

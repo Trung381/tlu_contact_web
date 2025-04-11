@@ -5,6 +5,7 @@ const routes = {
   staff: '/staff',
   student: '/student',
   department: '/department',
+  departmentType: '/department-type',
   contact: '/contact',
   login: '/login',
   register: '/register',

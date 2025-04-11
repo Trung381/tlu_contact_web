@@ -13,6 +13,7 @@ import LoginPage from './pages/LoginPage';
 import Staff from './pages/StaffPage';
 import Student from './pages/StudentPage';
 import Department from './pages/DepartmentPage';
+import DepartmentType from './pages/DepartmentTypePage';
 
 // Các trang mẫu giữ nguyên như cũ
 const AboutPage = () => <div className="min-h-[60vh] flex items-center justify-center"><h1 className="text-3xl font-bold">Trang Giới Thiệu</h1></div>;
@@ -72,6 +73,7 @@ function App() {
             <Route path={routes.staff} element={<Staff />} />
             <Route path={routes.student} element={<Student />} />
             <Route path={routes.department} element={<Department />} />
+            <Route path={routes.departmentType} element={<DepartmentType />} />
             <Route path={routes.contact} element={<ContactPage />} />
             
             {/* Route cần xác thực */}
