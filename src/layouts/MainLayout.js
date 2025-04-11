@@ -2,9 +2,14 @@ import React from 'react';
 import { Outlet, Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import routes from '../config/routes';
+import logo from '../assets/images/logo-tlu.png';
 
 const MainLayout = () => {
   const { isAuthenticated, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -12,7 +17,9 @@ const MainLayout = () => {
       <header className="bg-base-100 shadow-md">
         <div className="navbar container mx-auto">
           <div className="flex-1">
-            <Link to={routes.home} className="btn btn-ghost text-2xl">Logo</Link>
+            <Link to={routes.home} className=" text-2xl">
+              <img src={logo} alt="TLU Logo" className="h-8" />
+            </Link>
           </div>
           <div className="flex-none">
             <ul className="menu menu-horizontal px-1">
@@ -22,14 +29,17 @@ const MainLayout = () => {
               <li><NavLink to={routes.staff} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Danh bạ CBGV</NavLink></li>
               <li><NavLink to={routes.student} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Danh bạ sinh viên</NavLink></li>
               {isAuthenticated ? (
-                <>
-                  <li><NavLink to={routes.profile} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Tài khoản</NavLink></li>
-                  <li><button onClick={logout}>Đăng xuất</button></li>
-                </>
+                <li>
+                  <button onClick={handleLogout} className="btn btn-ghost">
+                    Đăng xuất
+                  </button>
+                </li>
               ) : (
-                <>
-                  <li><NavLink to={routes.login} className={({ isActive }) => (isActive ? 'btn px-3 btn-soft btn-primary' : 'btn px-3 btn-ghost')}>Đăng nhập</NavLink></li>
-                </>
+                <li>
+                  <Link to={routes.login} className="btn btn-ghost">
+                    Đăng nhập
+                  </Link>
+                </li>
               )}
             </ul>
           </div>
@@ -46,25 +56,26 @@ const MainLayout = () => {
         <div className="container mx-auto">
           <div className="footer">
             <div>
-              <span className="footer-title">Dịch vụ</span> 
-              <Link to="/" className="link link-hover">Tính năng</Link>
-              <Link to="/" className="link link-hover">Giá cả</Link>
-              <Link to="/" className="link link-hover">Hỗ trợ</Link>
+              <span className="footer-title">Trường Đại học Thủy lợi</span> 
+              <p>175 Tây Sơn, Đống Đa, Hà Nội</p>
+              <p>Điện thoại: (024) 38522201</p>
+              <p>Email: phonghcth@tlu.edu.vn</p>
             </div> 
             <div>
-              <span className="footer-title">Công ty</span> 
-              <Link to={routes.about} className="link link-hover">Giới thiệu</Link>
-              <Link to={routes.contact} className="link link-hover">Liên hệ</Link>
-              <Link to="/" className="link link-hover">Tuyển dụng</Link>
+              <span className="footer-title">Liên kết</span> 
+              <a href="https://www.tlu.edu.vn" target="_blank" rel="noopener noreferrer" className="link link-hover">Website trường</a>
+              <a href="https://www.tlu.edu.vn/lien-he" target="_blank" rel="noopener noreferrer" className="link link-hover">Liên hệ</a>
+              <a href="https://www.tlu.edu.vn/dao-tao" target="_blank" rel="noopener noreferrer" className="link link-hover">Đào tạo</a>
             </div> 
             <div>
-              <span className="footer-title">Pháp lý</span> 
-              <Link to="/" className="link link-hover">Điều khoản sử dụng</Link>
-              <Link to="/" className="link link-hover">Chính sách bảo mật</Link>
+              <span className="footer-title">Hệ thống</span> 
+              <Link to={routes.department} className="link link-hover">Danh bạ đơn vị</Link>
+              <Link to={routes.staff} className="link link-hover">Danh bạ CBGV</Link>
+              <Link to={routes.student} className="link link-hover">Danh bạ sinh viên</Link>
             </div>
           </div>
           <div className="mt-10 text-center">
-            <p>© {new Date().getFullYear()} - Bản quyền thuộc về Công ty ABC</p>
+            <p>© {new Date().getFullYear()} - Bản quyền thuộc về Trường Đại học Thủy lợi</p>
           </div>
         </div>
       </footer>
