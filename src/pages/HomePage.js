@@ -1,88 +1,81 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Button from '../components/Button';
+import routes from '../config/routes';
+import { FaUsers, FaUserTie, FaGraduationCap, FaBuilding } from 'react-icons/fa';
 
 const HomePage = () => {
-  const features = [
-    {
-      id: 1,
-      title: 'Tính năng 1',
-      description: 'Mô tả chi tiết về tính năng 1 của sản phẩm.',
-      icon: '🚀',
-    },
-    {
-      id: 2,
-      title: 'Tính năng 2',
-      description: 'Mô tả chi tiết về tính năng 2 của sản phẩm.',
-      icon: '⚡',
-    },
-    {
-      id: 3,
-      title: 'Tính năng 3',
-      description: 'Mô tả chi tiết về tính năng 3 của sản phẩm.',
-      icon: '🔍',
-    },
-    {
-      id: 4,
-      title: 'Tính năng 4',
-      description: 'Mô tả chi tiết về tính năng 4 của sản phẩm.',
-      icon: '🔒',
-    },
-  ];
-
   return (
-    <div>
+    <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="hero min-h-[70vh] bg-base-200 rounded-box">
+      <div className="hero min-h-[60vh] bg-base-200">
         <div className="hero-content text-center">
-          <div className="max-w-md">
-            <h1 className="text-5xl font-bold">Chào mừng đến với ứng dụng</h1>
-            <p className="py-6">
-              Đây là mô tả ngắn gọn về ứng dụng của bạn. Giới thiệu các tính năng chính và giá trị mà người dùng sẽ nhận được.
+          <div className="max-w-2xl">
+            <h1 className="text-5xl font-bold">Hệ thống Danh bạ Điện tử</h1>
+            <p className="py-6 text-xl">
+              Trường Đại học Thủy lợi
             </p>
-            <div className="flex gap-4 justify-center">
-              <Button variant="primary" size="lg">Bắt đầu ngay</Button>
-              <Button variant="outline" size="lg">Tìm hiểu thêm</Button>
+            <div className="flex justify-center gap-4">
+              <Link to={routes.department} className="btn btn-primary">Danh bạ đơn vị</Link>
+              <Link to={routes.staff} className="btn btn-primary">Danh bạ CBGV</Link>
+              <Link to={routes.student} className="btn btn-primary">Danh bạ sinh viên</Link>
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Features Section */}
-      <section className="py-12">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold">Tính năng nổi bật</h2>
-          <p className="mt-4 text-lg">Khám phá những tính năng tuyệt vời của ứng dụng</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {features.map((feature) => (
-            <div key={feature.id} className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
-              <div className="card-body">
-                <div className="text-4xl mb-4">{feature.icon}</div>
-                <h3 className="card-title">{feature.title}</h3>
-                <p>{feature.description}</p>
+      <div className="py-16 bg-base-100">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">Tính năng chính</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="card bg-base-200 shadow-xl">
+              <div className="card-body items-center text-center">
+                <FaBuilding className="text-4xl text-primary mb-4" />
+                <h3 className="card-title">Quản lý đơn vị</h3>
+                <p>Quản lý thông tin các đơn vị, phòng ban trong trường</p>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-12">
-        <div className="card bg-primary text-primary-content">
-          <div className="card-body text-center">
-            <h2 className="card-title text-3xl mx-auto mb-4">Sẵn sàng để bắt đầu?</h2>
-            <p className="max-w-2xl mx-auto mb-6">
-              Tham gia cùng hàng nghìn người dùng đã sử dụng ứng dụng của chúng tôi để nâng cao hiệu suất công việc.
-            </p>
-            <div className="flex gap-4 justify-center">
-              <Button variant="accent" size="lg">Đăng ký ngay</Button>
-              <Button variant="ghost" size="lg">Xem demo</Button>
+            <div className="card bg-base-200 shadow-xl">
+              <div className="card-body items-center text-center">
+                <FaUserTie className="text-4xl text-primary mb-4" />
+                <h3 className="card-title">Quản lý CBGV</h3>
+                <p>Quản lý thông tin cán bộ, giảng viên trong trường</p>
+              </div>
+            </div>
+            <div className="card bg-base-200 shadow-xl">
+              <div className="card-body items-center text-center">
+                <FaGraduationCap className="text-4xl text-primary mb-4" />
+                <h3 className="card-title">Quản lý sinh viên</h3>
+                <p>Quản lý thông tin sinh viên các khoa, ngành</p>
+              </div>
+            </div>
+            <div className="card bg-base-200 shadow-xl">
+              <div className="card-body items-center text-center">
+                <FaUsers className="text-4xl text-primary mb-4" />
+                <h3 className="card-title">Tìm kiếm thông minh</h3>
+                <p>Tìm kiếm nhanh chóng thông tin cần thiết</p>
+              </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+
+      {/* Contact Section */}
+      <div className="py-16 bg-base-200">
+        <div className="container mx-auto px-4">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-8">Liên hệ hỗ trợ</h2>
+            <p className="mb-4">
+              Nếu bạn cần hỗ trợ hoặc có thắc mắc về hệ thống, vui lòng liên hệ:
+            </p>
+            <div className="space-y-2">
+              <p>Phòng Công tác Học sinh - Sinh viên</p>
+              <p>Điện thoại: (024) 38522201</p>
+              <p>Email: phonghcth@tlu.edu.vn</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

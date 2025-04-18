@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useNavigate } from "react-router-dom";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
 import logoTLU from '../assets/images/logo-tlu.png';
-import authService from '../services/authService';
+import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage = () => {
     const [email, setEmail] = useState("");
@@ -11,13 +11,14 @@ const LoginPage = () => {
     const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setError(null); // Xóa lỗi cũ nếu có
 
         try {
-            const result = await authService.login(email, password);
+            const result = await login(email, password);
             
             if (result.success) {
                 // Chuyển hướng về trang chủ
