@@ -1,22 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Notification from '../components/Notification';
 import Modal from '../components/Modal';
 import Table from '../components/Table';
-import { EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Form, Tooltip, Button, Input } from 'antd';
 import { getAllDepartmentTypes, createDepartmentType, updateDepartmentType, deleteDepartmentTypes } from '../services/api';
 
 const DepartmentTypePage = () => {
   const [showModalCreate, setShowModalCreate] = useState(false);
-  const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [createLoading, setCreateLoading] = useState(false);
   const [notification, setNotification] = useState({ type: null, message: null, desc: null });
   const [data, setData] = useState([]);
   const [tableParams, setTableParams] = useState({
     pagination: {
       current: 1,
-      pageSize: 10,
+      pageSize: 20,
     },
   });
   const [showModalDelete, setShowModalDelete] = useState(false);
@@ -29,31 +27,32 @@ const DepartmentTypePage = () => {
     "onClose": null,
     "form": null,
     "formContent": null,
-    "footer": null
+    "footer": null,
+    "isCreateForm": false,
   });
   const [selectedRows, setSelectedRows] = useState([]);
 
+  const handleSetNotification = (type, msg, desc) => {
+    setNotification({ type: type, message: msg, desc: desc })
+  }
+
   const fetchData = async () => {
     setLoading(true);
-    try {
-      const result = await getAllDepartmentTypes();
-      setData(result.data);
-      setTableParams({
-        ...tableParams,
-        pagination: {
-          ...tableParams.pagination,
-          total: result.data.length,
-        },
-      });
-    } catch (error) {
-      console.error('Error fetching department types:', error);
-      setNotification({
-        type: 'error',
-        message: 'Lỗi tải dữ liệu',
-        desc: error.message || 'Có lỗi xảy ra khi lấy dữ liệu',
-      });
-    } finally {
-      setLoading(false);
+    const response = await getAllDepartmentTypes();
+    setLoading(false);
+    if (response.status === 200) {
+      setData(response.data.data)
+      // setTableParams({
+      //   ...params,
+      //   pagination: {
+      //     ...params.pagination,
+      //     total: response.data.total_record, current: response.data.current_page + 1,
+      //   },
+      // })
+    } else {
+      handleSetNotification(
+        "error", response.data.message || "Đã có lỗi khi tải dữ liệu. Vui lòng thử lại sau.", null
+      )
     }
   };
 
@@ -61,88 +60,57 @@ const DepartmentTypePage = () => {
 
   const create = async (values) => {
     setLoading(true);
-    try {
-      const result = await createDepartmentType(values);
-      if (result.code === 200) {
-        fetchData();
-        setNotification({ type: 'success', message: 'Thành công', desc: 'Thêm mới thành công' });
-        setShowModalCreate(false);
-        form.resetFields();
-      } else {
-        setNotification({ type: 'error', message: 'Thất bại', desc: result?.message || 'Có lỗi xảy ra' });
-      }
-    } catch (error) {
-      setNotification({ type: 'error', message: 'Thất bại!', desc: error.message });
-    } finally {
-      setLoading(false);
-      setTimeout(() => {
-        setNotification({ type: null, message: null, desc: null });
-      }, 3000);
+    const response = await createDepartmentType(values);
+    if (response.status === 201 || response.status === 200) {
+      form.resetFields();
+      setShowModalCreate(false);
+      handleSetNotification("success", "Thành công", "Thêm thông tin loại đơn vị mới thành công.");
+      fetchData();
+    } else {
+      handleSetNotification("error", "Thất bại", response.data.message || 'Đã có lỗi xảy ra khi thêm thông tin loại đơn vị mới. Vui lòng thử lại sau.');
     }
+    setLoading(false)
   };
 
   const update = async (values) => {
     setLoading(true);
-    try {
-      console.log('Updating department type with values:', values);
-      const result = await updateDepartmentType(values.id, { name: values.name });
-      if (result.code === 200) {
-        fetchData();
-        setNotification({ type: 'success', message: 'Thành công', desc: 'Cập nhật thông tin thành công' });
-        setShowModalUpdate(false);
-      } else {
-        setNotification({ type: 'error', message: 'Thất bại', desc: result?.message || null });
-      }
-    } catch (error) {
-      console.error('Error updating department type:', error);
-      setNotification({ type: 'error', message: 'Thất bại', desc: 'Không thể cập nhật thông tin của loại phòng ban này' });
-    } finally {
-      setLoading(false);
-      setTimeout(() => {
-        setNotification({ type: null, message: null, desc: null });
-      }, 3000);
+    const response = await updateDepartmentType(values.id, { name: values.name });
+    if (response.status === 200) {
+      setShowModalUpdate(false);
+      handleSetNotification('success', 'Thành công', 'Cập nhật thông tin loại đơn vị thành công')
+      fetchData();
+    } else {
+      handleSetNotification('error', 'Thất bại', response.data.message || null)
     }
+    setLoading(false)
   };
 
   const deleteDepartmentType = async (record) => {
     setLoading(true);
-    try {
-      const result = await deleteDepartmentTypes({ ids: [record.id] });
-      if (result.code === 200) {
-        fetchData();
-        setNotification({ type: 'success', message: 'Thành công', desc: 'Xóa thành công' });
-      } else {
-        setNotification({ type: 'error', message: 'Thất bại', desc: result?.message || null });
-      }
-    } catch (error) {
-      setNotification({ type: 'error', message: 'Thất bại', desc: 'Không thể xóa loại phòng ban này' });
-    } finally {
-      setLoading(false);
-      setShowModalDelete(false);
-      setTimeout(() => {
-        setNotification({ type: null, message: null, desc: null });
-      }, 3000);
+    setShowModalDelete(false);
+    const response = await deleteDepartmentTypes({ ids: [record.id] });
+    if (response.status === 200) {
+      handleSetNotification('success', 'Thành công', 'Xóa thông tin loại đơn vị thành công')
+      fetchData();
+    } else {
+      handleSetNotification('error', 'Thất bại', response.data.message || null)
     }
+    setLoading(false)
   };
 
   const deleteMultipleDepartmentTypes = async () => {
     setLoading(true);
-    try {
-      const ids = selectedRows.map(row => row.id);
-      const result = await deleteDepartmentTypes({ ids: ids });
-      if (result.code === 200) {
-        fetchData();
-        setNotification({ type: 'success', message: 'Thành công', desc: `Đã xóa ${ids.length} bản ghi thành công` });
-        setShowModal(false);
-        setSelectedRows([]);
-      } else {
-        setNotification({ type: 'error', message: 'Thất bại', desc: result?.message || 'Có lỗi xảy ra' });
-      }
-    } catch (error) {
-      setNotification({ type: 'error', message: 'Thất bại', desc: 'Không thể xóa các bản ghi đã chọn' });
-    } finally {
-      setLoading(false);
+    const ids = selectedRows.map(row => row.id);
+    setShowModalDelete(false);
+    const response = await deleteDepartmentTypes({ ids: ids });
+    if (response.status === 200) {
+      setSelectedRows([]);
+      handleSetNotification('success', 'Thành công', `Đã xóa thành công ${ids.length} loại đơn vị` )
+      fetchData();
+    } else {
+      handleSetNotification('error', 'Thất bại', response.data.message || null)
     }
+    setLoading(false)
   };
 
   const handleCreate = () => {
@@ -183,8 +151,6 @@ const DepartmentTypePage = () => {
       title: `Cập nhật thông tin loại phòng ban`,
       form: form,
       formContent: getFormContent((values) => {
-        console.log('Form submitted with values:', values);
-        console.log('Record ID:', record.id);
         update({ ...values, id: record.id });
       }),
       footer: [
@@ -205,16 +171,13 @@ const DepartmentTypePage = () => {
     setModal({
       title: `Xóa thông tin loại phòng ban`,
       formContent: (
-        <div>
-          <p>Bạn có chắc chắn muốn xóa thông tin loại phòng ban này không?</p>
-          <p><strong>{record.name}</strong></p>
-        </div>
+          <p>Bạn có chắc chắn muốn xóa thông tin loại phòng ban <strong>{record.name}</strong> không?</p>
       ),
       footer: [
         <Button key="cancle" onClick={() => setShowModalDelete(false)}>
           Hủy
         </Button>,
-        <Button type="primary"
+        <Button type="delete"
           className="!text-white !bg-[#ff4d4f] !border-[#ff4d4f] hover:!bg-[#ff7875] hover:!border-[#ff7875]"
           onClick={() => deleteDepartmentType(record)}
         >Xóa</Button>
@@ -235,19 +198,13 @@ const DepartmentTypePage = () => {
     setModal({
       title: `Xóa thông tin loại phòng ban`,
       formContent: (
-        <div>
-          <p>Bạn có chắc chắn muốn xóa {selectedRows.length} bản ghi đã chọn không?</p>
-        </div>
+        <p>Bạn có chắc chắn muốn xóa <strong>{selectedRows.length}</strong> loại đơn vị đã chọn không?</p>
       ),
       footer: [
         <Button key="cancel" onClick={() => setShowModalDelete(false)}>Hủy</Button>,
-        <Button
-          key="delete"
-          type="primary"
-          danger
+        <Button key="delete" type="primary" danger
           onClick={deleteMultipleDepartmentTypes}
-        >Xóa
-        </Button>,
+        >Xóa</Button>,
       ],
       onOk: () => deleteMultipleDepartmentTypes(),
       onCancel: () => setShowModalDelete(false),
@@ -264,9 +221,7 @@ const DepartmentTypePage = () => {
 
   const getFormContent = (onFinish) => (
     <Form form={form} layout="vertical" onFinish={onFinish}
-      initialValues={{
-        name: '',
-      }}
+      initialValues={{ name: '', }}
     >
       <Form.Item label="Tên loại phòng ban" name="name"
         rules={[{ required: true, message: 'Vui lòng nhập tên loại phòng ban!' }]}
@@ -290,7 +245,7 @@ const DepartmentTypePage = () => {
         <Tooltip title="Chỉnh sửa">
           <Button
             icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
+            onClick={(e) => { e.stopPropagation(); handleEdit(record) }}
             type="link"
             style={{ color: 'blue' }}
           />
@@ -298,7 +253,7 @@ const DepartmentTypePage = () => {
         <Tooltip title="Xóa">
           <Button
             icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record)}
+            onClick={(e) => { e.stopPropagation(); handleDelete(record) }}
             type="link"
             style={{ color: 'red' }}
           />
@@ -314,7 +269,7 @@ const DepartmentTypePage = () => {
       <Modal showModal={showModalDelete} modal={modal} />
       <Modal showModal={showModalUpdate} modal={modal} />
       <Table
-        title={'loại phòng ban'}
+        title={'Loại phòng ban'}
         columns={columns}
         loading={loading}
         data={data}
@@ -323,6 +278,8 @@ const DepartmentTypePage = () => {
         onDeleteMultiple={handleDeleteMultiple}
         setSelectedRows={setSelectedRows}
         fetchData={fetchData}
+        onRow={handleEdit}
+        onExport={() => {}}
         rowKey="id" />
     </>
   );

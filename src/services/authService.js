@@ -1,30 +1,24 @@
-// Service xử lý xác thực người dùng
-import { apiClient } from './api';
+import { apiClient, login } from './api';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 
 const authService = {
   login: async (email, password) => {
-    try {
-      const response = await apiClient.post('/api/v1/auth/login', { email, password });
-      
-      // Lưu thông tin vào localStorage
-      localStorage.setItem("idToken", response.data.idToken);
-      localStorage.setItem("localId", response.data.localId);
-      localStorage.setItem("email", response.data.email);
-      localStorage.setItem("refreshToken", response.data.refreshToken);
-      
-      return { 
-        success: true, 
-        user: {
-          id: response.data.localId,
-          email: response.data.email
-        } 
-      };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Đăng nhập thất bại' 
-      };
+    const response = await login(email, password);
+    if (response.status === 200) {
+      const data = response.data;
+      sessionStorage.setItem('idToken', data?.idToken);
+      sessionStorage.setItem('email', data?.email);
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(getAuth(), email, password);
+        const user = userCredential.user;
+        const idToken = await user.getIdToken();
+        sessionStorage.setItem('idToken', idToken);
+      } catch (error) {
+        return { status: 400, }
+      }
     }
+    return response;
   },
 
   register: async (userData) => {
@@ -37,22 +31,36 @@ const authService = {
   },
 
   logout: () => {
-    // Xóa tất cả thông tin xác thực
-    localStorage.removeItem('idToken');
-    localStorage.removeItem('localId');
-    localStorage.removeItem('email');
-    localStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('idToken');
+    sessionStorage.removeItem('email');
     window.location.href = '/login';
   },
 
   getCurrentUser: () => {
-    const email = localStorage.getItem('email');
-    const localId = localStorage.getItem('localId');
-    return email && localId ? { email, id: localId } : null;
+    const email = sessionStorage.getItem('email');
+    return email ? { email } : null;
   },
 
   isAuthenticated: () => {
-    return !!localStorage.getItem('idToken');
+    return !!sessionStorage.getItem('idToken');
+  },
+
+  refreshToken: async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (user == null) {
+      return false;
+    }
+
+    try {
+      const idToken = await user.getIdToken(true);
+      sessionStorage.setItem('idToken', idToken);
+      return true;
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+      return false;
+    }
   }
 };
 

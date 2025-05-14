@@ -13,19 +13,28 @@ const SearchInput = ({ onSearch, placeholder = "Tìm kiếm...", loading = false
 
   const handleSearch = (value) => {
     // Call search even when value is empty string
-    debouncedSearch(value || "");
+    debouncedSearch(value);
   };
 
   return (
-    <Search
-      placeholder={placeholder}
-      onChange={(e) => handleSearch(e.target.value)}
-      style={{ width: 250 }}
-      loading={loading}
-      prefix={<SearchOutlined />}
-      allowClear
-      onSearch={handleSearch} // Add onSearch handler for when user hits enter or clicks search button
-    />
+    <>
+      <Search
+        placeholder="Tìm mã số, tên, số điện thoại, email..."
+        prefix={<SearchOutlined />}
+        onChange={(e) => handleSearch(e.target.value)}
+        onSearch={handleSearch}
+        loading={loading}
+        allowClear
+        enterButton
+        style={{
+          width: '100vw',
+          minWidth: '200px',
+          maxWidth: '350px',
+          backgroundColor: '#1677ff',
+          borderRadius: '6px',
+        }}
+      />
+    </>
   );
 };
 

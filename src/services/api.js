@@ -1,5 +1,6 @@
 // Các hàm xử lý gọi API
 import axios from 'axios';
+import authService from './authService';
 
 // const baseURL = process.env.BASE_URL || 'http://localhost:8080';
 const baseURL = 'https://tlu-contact-1-0-0.onrender.com';
@@ -15,7 +16,7 @@ const apiClient = axios.create({
 // Xử lý interceptor cho request
 apiClient.interceptors.request.use(
   (config) => {
-    const idToken = localStorage.getItem('idToken');
+    const idToken = sessionStorage.getItem('idToken');
     if (idToken) {
       config.headers.Authorization = `Bearer ${idToken}`;
     }
@@ -30,15 +31,25 @@ apiClient.interceptors.request.use(
 // Xử lý interceptor cho response
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    // Xử lý lỗi response
-    if (error.response && error.response.status === 401) {
-      // Xử lý lỗi 401 Unauthorized
-      localStorage.removeItem('idToken');
-      localStorage.removeItem('localId');
-      localStorage.removeItem('email');
-      localStorage.removeItem('refreshToken');
-      window.location.href = '/login';
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true; //cho phép retry
+
+      try {
+        const refreshed = await authService.refreshToken();
+        if (refreshed) {
+          const newToken = sessionStorage.getItem('idToken');
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return apiClient(originalRequest)
+        } else {
+          authService.logout();
+          return;
+        }
+      } catch (error) {
+        authService.logout();
+        return;
+      }
     }
     return Promise.reject(error);
   }
@@ -47,50 +58,30 @@ apiClient.interceptors.response.use(
 let login = async (email, password) => {
   try {
     const response = await apiClient.post('/api/v1/auth/login', { email, password });
-    return response.data;
+    // const response = await apiClient.post('/api/v1/auth/admin/login', { email, password });
+    return response;
   } catch (error) {
-    throw error.response.data;
+    return error.response;
   }
 };
 
-/**
- * 
- * @param {number} page 
- * @param {number} size 
- * @param {boolean} sort 
- * @param {string} search 
- * @param {boolean} deleted 
- * @returns {Promise<Object>}
- */
-let getStaffs = async (page = 0, size = 20, sort = false, search = null, deleted = false) => {
+let getStaffs = async (page = 0, size = 20, sort = true, search = null, deleted = false, filterId = null) => {
   try {
     const response = await apiClient.get('/api/v1/staff', {
-      params: { page, size, sort, search, deleted }
+      params: { page, size, sort, search, deleted, filterId }
     });
-    if (response.status !== 200) {
-      console.error('Error fetching data:', response.statusText);
-      throw new Error('Failed to fetch data');
-    }
-    console.log('Data fetched successfully:', response.data);
-    return {
-      data: response.data.data,
-      total: response.data.total_record,
-      currentPage: response.data.current_page
-    };
+    return response;
   } catch (error) {
-    throw error.response.data;
+    return error.response;
   }
 };
 
-/**
- * @param {string} id 
- */
 let getStaffById = async (id) => {
   try {
     const response = await apiClient.get(`/api/v1/staffs/${id}`);
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw error.response;
   }
 }
 
@@ -99,7 +90,7 @@ let createStaff = async (data) => {
     const response = await apiClient.post('/api/v1/staff/create', data);
     return response;
   } catch (error) {
-    return error.response.data;
+    return error.response;
   }
 }
 
@@ -108,37 +99,54 @@ let updateStaff = async (id, data) => {
     const response = await apiClient.post(`/api/v1/staff/update/${id}`, data);
     return response;
   } catch (error) {
-    return error.response.data;
+    return error.response;
   }
 }
 
 let deleteStaffs = async (ids) => {
   try {
     const response = await apiClient.post(`/api/v1/staff/delete`, ids);
-    console.log('Response:', response);
     return response;
   } catch (error) {
-    throw error.response.data;
+    throw error.response;
   }
 }
 
-let getStudents = async (page = 0, size = 20, sort = false, search = null, deleted = false) => {
+let importStaffs = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post('/api/v1/staff/import', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response;
+  } catch (error) {
+    return error.response;
+  }
+}
+
+let exportStaffs = async (page = 0, size = 20, sort = true, search = null, deleted = false, filterId = null) => {
+  try {
+    const response = await apiClient.get('/api/v1/staff/export-excel', {
+      params: { page, size, sort, search, deleted, filterId },
+      responseType: 'blob'
+    });
+    return response;
+  } catch (error) {
+    return error.response;
+  }
+}
+
+let getStudents = async (page = 0, size = 20, sort = true, search = null, deleted = false, filterId = null) => {
   try {
     const response = await apiClient.get('/api/v1/students', {
-      params: { page, size, sort, search, deleted }
+      params: { page, size, sort, search, deleted, filterId }
     });
-    if (response.status !== 200) {
-      console.error('Error fetching data:', response.statusText);
-      throw new Error('Failed to fetch data');
-    }
-    console.log('Students data fetched successfully:', response.data);
-    return {
-      data: response.data.data,
-      total: response.data.total_record,
-      currentPage: response.data.current_page
-    };
+    return response;
   } catch (error) {
-    throw error.response.data;
+    return error.response;
   }
 };
 
@@ -147,7 +155,7 @@ let createStudent = async (data) => {
     const response = await apiClient.post('/api/v1/student/create', data);
     return response;
   } catch (error) {
-    return error.response.data;
+    return error.response;
   }
 }
 
@@ -156,82 +164,126 @@ let updateStudent = async (id, data) => {
     const response = await apiClient.post(`/api/v1/student/update/${id}`, data);
     return response;
   } catch (error) {
-    return error.response.data;
+    return error.response;
   }
 }
 
 let deleteStudents = async (ids) => {
   try {
     const response = await apiClient.post(`/api/v1/student/delete`, ids);
-    console.log('Response:', response);
     return response;
   } catch (error) {
-    throw error.response.data;
+    throw error.response;
   }
 }
 
+let importStudents = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post('/api/v1/student/import', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response;
+  } catch (error) {
+    return error.response;
+  }
+}
 
-let getDepartments = async (page = 0, size = 20, search = null, deleted = false, filterId = null) => {
+let exportStudents = async (page = 0, size = 20, sort = true, search = null, deleted = false, filterId = null) => {
+  try {
+    const response = await apiClient.get('/api/v1/students/export-excel', {
+      params: { page, size, sort, search, deleted, filterId },
+      responseType: 'blob'
+    });
+    return response;
+  } catch (error) {
+    return error.response;
+  }
+}
+
+let getDepartments = async (page = 0, size = 20, sort = true, search = null, deleted = false, filterId = null) => {
   try {
     const response = await apiClient.get('/api/v1/departments', {
-      params: { page, size, search, deleted, filterId },
+      params: { page, size, sort, search, deleted, filterId },
     });
-    if (response.status !== 200) {
-      console.error('Error fetching data:', response.statusText);
-      throw new Error('Failed to fetch data');
-    }
-    console.log('Departments data fetched successfully:', response.data);
-    return {
-      data: response.data.data,
-      total: response.data.total_record,
-      currentPage: response.data.current_page
-    };
+    return response;
   } catch (error) {
-    console.error("getDepartments error:", error);
-    throw error.response?.data || { message: 'Server error' };
+    return error.response;
   }
 };
 
-
-
-
+let getDepartmentById = async (id) => {
+  try {
+    const response = await apiClient.get(`/api/v1/department/${id}`);
+    return response;
+  } catch (error) {
+    return error.response;
+  }
+}
 
 let createDepartments = async (data) => {
   try {
     const response = await apiClient.post('/api/v1/department/create', data);
     return response;
   } catch (error) {
-    return error.response.data;
+    return error.response;
   }
 }
-
 
 let updateDepartments = async (id, data) => {
   try {
     const response = await apiClient.post(`/api/v1/department/update/${id}`, data);
     return response;
   } catch (error) {
-    return error.response.data;
+    return error.response;
   }
 }
 
 let deleteDepartments = async (ids) => {
   try {
     const response = await apiClient.post(`/api/v1/department/delete`, ids);
-    console.log('Response:', response);
     return response;
   } catch (error) {
-    throw error.response.data;
+    throw error.response;
+  }
+}
+
+let importDepartments = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post('/api/v1/department/import', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response;
+  } catch (error) {
+    return error.response;
+  }
+}
+
+let exportDepartments = async (page = 0, size = 20, sort = true, search = null, deleted = false, filterId = null) => {
+  try {
+    const response = await apiClient.get('/api/v1/departments/export-excel', {
+      params: { page, size, sort, search, deleted, filterId },
+      responseType: 'blob'
+    });
+    return response;
+  } catch (error) {
+    return error.response;
   }
 }
 
 let getDepartmentTypes = async () => {
   try {
     const response = await apiClient.get('/api/v1/department-types');
-    return response.data;
+    return response;
   } catch (error) {
-    console.error("getDepartmentTypes error:", error);
-    throw error.response?.data || { message: 'Server error' };
+    return error.response;
   }
 };
 
@@ -241,10 +293,9 @@ export const getChildDepartments = async (parentId) => {
     const response = await apiClient.get(`/api/v1/department-types/filter`, {
       params: { parentId }
     });
-    return response.data;
+    return response;
   } catch (error) {
-    console.error('Error fetching child departments:', error);
-    throw error;
+    return error.response;
   }
 };
 
@@ -252,45 +303,120 @@ export const getChildDepartments = async (parentId) => {
 export const getAllDepartmentTypes = async () => {
   try {
     const response = await apiClient.get('/api/v1/department-types');
-    return response.data;
+    return response;
   } catch (error) {
-    console.error('Error fetching department types:', error);
-    throw error;
+    return error.response;
   }
 };
 
 export const createDepartmentType = async (data) => {
   try {
     const response = await apiClient.post('/api/v1/department-types/create', data);
-    return response.data;
+    return response;
   } catch (error) {
-    console.error('Error creating department type:', error);
-    throw error;
+    return error.response;
   }
 };
 
 export const updateDepartmentType = async (id, data) => {
   try {
     const response = await apiClient.post(`/api/v1/department-types/update/${id}`, data);
-    return response.data;
+    return response;
   } catch (error) {
-    console.error('Error updating department type:', error);
-    throw error;
+    return error.response;
   }
 };
 
 export const deleteDepartmentTypes = async (data) => {
   try {
     const response = await apiClient.post('/api/v1/department-types/delete', data);
-    return response.data;
+    return response;
   } catch (error) {
-    console.error('Error deleting department types:', error);
-    throw error;
+    return error.response;
   }
 };
 
+let getUsers = async (page = 0, size = 20, sort = true, search = null, deleted = false) => {
+  try {
+    const response = await apiClient.get('/api/v1/users', {
+      params: { page, size, sort, search, deleted },
+    });
+    return response;
+  } catch (error) {
+    return error.response;
+  }
+};
+
+let updateUser = async (id, data) => {
+  try {
+    const response = await apiClient.post(`/api/v1/users/update/${id}`, data);
+    return response;
+  } catch (error) {
+    return error.response;
+  }
+}
+
+let deleteUsers = async (ids) => {
+  try {
+    const response = await apiClient.post(`/api/v1/users/delete`, ids);
+    return response;
+  } catch (error) {
+    throw error.response;
+  }
+}
+
+let exportUsers = async (page = 0, size = 20, sort = true, search = null, deleted = false) => {
+  try {
+    const response = await apiClient.get('/api/v1/users/export-excel', {
+      params: { page, size, sort, search, deleted },
+      responseType: 'blob'
+    });
+    return response;
+  } catch (error) {
+    return error.response;
+  }
+}
+
+let resetUserPassword = async (uid, email) => {
+  try {
+    const response = await apiClient.post('/api/v1/users/reset-password', {
+      uid, email
+    });
+    return response.data;
+  } catch (error) {
+    return error.response;
+  }
+}
+
+let uploadPhoto = async (file, type) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    let endpoint = null;
+    switch (type) {
+      case 'department': endpoint = '/api/v1/department/avatar/upload'; break;
+      case 'staff': endpoint = '/api/v1/staff/avatar/upload'; break;
+      case 'student': endpoint = '/api/v1/student/avatar/upload'; break;
+    }
+    if (!endpoint) {
+      return {status: 404};
+    }
+    const response = await apiClient.post(endpoint, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response;
+  } catch (error) {
+    return error.response;
+  }
+}
+
 export {
-  apiClient, getStaffs, getStaffById, createStaff, updateStaff, deleteStaffs, login,
-  getStudents, createStudent, updateStudent, deleteStudents, getDepartments, createDepartments, updateDepartments, deleteDepartments,
-  getDepartmentTypes
+  apiClient, getStaffs, getStaffById, createStaff, updateStaff, deleteStaffs, importStaffs, exportStaffs, login,
+  getStudents, createStudent, updateStudent, deleteStudents, importStudents, exportStudents,
+  getDepartments, createDepartments, updateDepartments, deleteDepartments, importDepartments, exportDepartments, getDepartmentById,
+  getDepartmentTypes,
+  getUsers, updateUser, deleteUsers, exportUsers, resetUserPassword,
+  uploadPhoto
 };

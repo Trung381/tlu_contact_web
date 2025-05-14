@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Select } from 'antd';
 import { getDepartments } from '../services/api';
 
@@ -11,7 +11,6 @@ const DepartmentSelect = ({ value, onChange, placeholder = "Chọn đơn vị", 
       setLoading(true);
       try {
         const result = await getDepartments(0, 100, null, false);
-        console.log("Department select data:", result);
         const formattedDepartments = result.data.map(dept => ({
           label: dept.name,
           value: dept.code

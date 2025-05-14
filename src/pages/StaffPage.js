@@ -1,24 +1,20 @@
-import React, { useState, useEffect } from "react";
-import { getStaffs, getStaffById, createStaff, updateStaff, deleteStaffs } from "../services/api";
+import { useState, useEffect } from "react";
+import { getStaffs, createStaff, updateStaff, deleteStaffs, importStaffs, exportStaffs } from "../services/api";
 import Table from "../components/Table";
 import Modal from "../components/Modal";
 import Notification from "../components/Notification";
 import SearchInput from "../components/SearchInput";
-import { Button, Form, Space, Tooltip, Input, Upload, Select } from 'antd';
+import { Button, Form, Tooltip, Input, Upload } from 'antd';
 import { EditOutlined, DeleteOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
 import DepartmentSelect from '../components/DepartmentSelect';
 
 const StaffPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [createLoading, setCreateLoading] = useState(false);
   const [notification, setNotification] = useState({ type: null, message: null, desc: null });
   const [data, setData] = useState([]);
   const [tableParams, setTableParams] = useState({
-    pagination: {
-      current: 1,
-      pageSize: 10,
-    },
+    pagination: { current: 1, pageSize: 20, },
   });
   const [showModalDelete, setShowModalDelete] = useState(false);
   const [showModalUpdate, setShowModalUpdate] = useState(false);
@@ -27,77 +23,88 @@ const StaffPage = () => {
   const [modal, setModal] = useState({
     "title": null,
     "onOk": null,
+    "onImport": null,
     "onCancel": null,
     "onClose": null,
     "form": null,
     "formContent": null,
     "formUpload": null,
-    "footer": null
+    "footer": null,
+    "isCreateForm": false,
   });
   const [selectedRows, setSelectedRows] = useState([]);
   const [searchText, setSearchText] = useState("");
 
+  const handleSetNotification = (type, msg, desc) => {
+    setNotification({ type: type, message: msg, desc: desc })
+  }
+
   const fetchData = async (params = tableParams) => {
     setLoading(true);
-    try {
-      const result = await getStaffs(
-        params.pagination.current - 1,
-        params.pagination.pageSize,
-        false,
-        searchText,
-        false
-      );
-      console.log("staff result", result);
-      setData(result.data);
+    const response = await getStaffs(
+      params.pagination.current - 1, params.pagination.pageSize, true, searchText, false, null
+    );
+    setLoading(false);
+    if (response.status === 200) {
+      setData(response.data.data)
       setTableParams({
         ...params,
         pagination: {
           ...params.pagination,
-          total: result.total,
-          current: result.currentPage + 1,
+          total: response.data.total_record, current: response.data.current_page + 1,
         },
-      });
-    } catch (error) {
-      setNotification({
-        type: 'error',
-        message: 'Lỗi tải dữ liệu',
-        desc: error.message || 'Có lỗi xảy ra khi lấy dữ liệu',
-      });
-    } finally {
-      setLoading(false);
+      })
+    } else {
+      handleSetNotification(
+        "error", response.data.message || "Đã có lỗi khi tải dữ liệu. Vui lòng thử lại sau.", null
+      )
     }
   };
 
   useEffect(() => { fetchData(); }, []);
 
+  const exporting = async (params = tableParams) => {
+    handleSetNotification('info', 'Đang xử lý', 'Quá trình trích xuất dữ liệu đang được tiến hành, bạn hãy lưu file sau khi hoàn tất.')
+    const response = await exportStaffs(
+      params.pagination.current - 1, 999999999, false, searchText, false
+    );
+    if (response.status === 200) {
+      const url = window.URL.createObjectURL(new Blob(
+        [response.data],
+        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', }
+      ));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'staffs.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } else {
+      handleSetNotification('error', 'Thất bại', response.data.message || null)
+    }
+  };
+
   const handleTableChange = (pagination, filters, sorter) => {
-    setTableParams({
-      pagination,
-      filters,
-      ...sorter,
-    });
-    fetchData({
-      pagination,
-      filters,
-      ...sorter,
-    });
+    setTableParams({ pagination, filters, ...sorter, });
+    fetchData({ pagination, filters, ...sorter, });
   };
 
   const handleView = (record) => {
     setShowModalView(true);
     setModal({
-      title: `Chi tiết CBGV`,
+      title: `Thông tin cán bộ, giảng viên`,
       formContent: (
         <div className="space-y-4">
           <div className="flex items-center space-x-4">
             <img
-              src={record.photoBase64 ? `data:image/png;base64,${record.photoBase64}` : `/avatar.png`}
+              src={record.photo ? record.photo : `/avatar.png`}
               alt="avatar"
-              className="w-24 h-24 rounded-full object-cover"
+              className="w-32 h-32 rounded-full object-cover"
             />
             <div>
-              <h3 className="text-lg font-semibold">{record.fullName}</h3>
-              <p className="text-gray-600">Mã nhân viên: {record.staffId}</p>
+              <h3 className="text-lg font-semibold">{record.name}</h3>
+              <p className="text-gray-600">Mã nhân viên: {record.id}</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -108,14 +115,6 @@ const StaffPage = () => {
             <div>
               <p className="font-medium">Số điện thoại:</p>
               <p>{record.phone}</p>
-            </div>
-            <div>
-              <p className="font-medium">Chức vụ:</p>
-              <p>{record.position}</p>
-            </div>
-            <div>
-              <p className="font-medium">User ID:</p>
-              <p>{record.userID || "Chưa cập nhật"}</p>
             </div>
             <div className="col-span-2">
               <p className="font-medium">Đơn vị:</p>
@@ -129,13 +128,15 @@ const StaffPage = () => {
                 <p>Chưa cập nhật</p>
               )}
             </div>
+            <div>
+              <p><span className="font-medium">Chức vụ:</span> {record.position}</p>
+            </div>
           </div>
         </div>
       ),
       footer: [
-        <Button key="close" onClick={() => setShowModalView(false)}>
-          Đóng
-        </Button>
+        <Button key="edit" onClick={() => { setShowModalView(false); handleEdit(record) }}>Chỉnh sửa</Button>,
+        <Button key="close" onClick={() => setShowModalView(false)}>Đóng</Button>
       ],
       onCancel: () => setShowModalView(false),
       onClose: () => setShowModalView(false)
@@ -145,41 +146,35 @@ const StaffPage = () => {
   const columns = [
     {
       title: '',
-      dataIndex: 'photoBase64',
+      dataIndex: 'photo',
       key: 'avatar',
-      render: base64 => (
+      render: url => (
         <img
-          src={base64 ? `data:image/png;base64,${base64}` : `/avatar.png`}
+          src={url ? url : `/avatar.png`}
           alt="avatar"
           style={{ borderRadius: '50%', width: 28, height: 28, objectFit: 'cover' }}
         />
       ),
-      width: 80,
+      width: 50,
     },
     {
       title: 'Họ và tên',
-      dataIndex: 'fullName',
+      dataIndex: 'name',
       sorter: true,
       render: name => `${name}`,
-      width: '15%',
+      width: 180,
     },
     {
       title: 'Số điện thoại',
       dataIndex: 'phone',
       render: phone => `${phone}`,
-      width: '12%',
+      width: 120,
     },
     {
       title: 'Email',
       dataIndex: 'email',
       render: email => `${email}`,
-      width: '18%',
-    },
-    {
-      title: 'Chức vụ',
-      dataIndex: 'position',
-      render: position => `${position}`,
-      width: '15%',
+      width: 230,
     },
     {
       title: 'Đơn vị',
@@ -188,7 +183,13 @@ const StaffPage = () => {
         if (!Array.isArray(departments)) return '';
         return departments.map(dep => dep.name).join(', ');
       },
-      width: '20%',
+      width: 180,
+    },
+    {
+      title: 'Chức vụ',
+      dataIndex: 'position',
+      render: position => `${position}`,
+      width: 200,
     },
     {
       title: 'Hành động',
@@ -198,7 +199,7 @@ const StaffPage = () => {
           <Tooltip title="Chỉnh sửa">
             <Button
               icon={<EditOutlined />}
-              onClick={() => handleEdit(record)}
+              onClick={(e) => { e.stopPropagation(); handleEdit(record) }}
               type="link"
               style={{ color: 'blue' }}
             />
@@ -206,7 +207,7 @@ const StaffPage = () => {
           <Tooltip title="Xóa">
             <Button
               icon={<DeleteOutlined />}
-              onClick={() => handleDelete(record)}
+              onClick={(e) => { e.stopPropagation(); handleDelete(record) }}
               type="link"
               style={{ color: 'red' }}
             />
@@ -214,42 +215,46 @@ const StaffPage = () => {
           <Tooltip title="Chi tiết">
             <Button
               icon={<EyeOutlined />}
-              onClick={() => handleView(record)}
+              onClick={(e) => { e.stopPropagation(); handleView(record) }}
               type="link"
               style={{ color: 'green' }}
             />
           </Tooltip>
         </div>
       ),
+      width: 120,
     },
   ];
 
   const create = async (values) => {
-    setCreateLoading(true);
-    try {
-      // Format the data to match the API structure
-      const formattedData = {
-        ...values,
-        // Convert departmentIds array to departments array with code property
-        departments: values.departmentIds.map(code => ({ code }))
-      };
-      
-      const result = await createStaff(formattedData);
-      if (result.status === 201 || result.status === 200) {
-        fetchData();
-        setNotification({ type: 'success', message: 'Thành công', desc: 'Thêm mới thành công' });
-        setShowModal(false);
-      } else {
-        setNotification({ type: 'error', message: 'Thất bại', desc: result?.message || 'Có lỗi xảy ra' });
-      }
-    } catch (error) {
-      setNotification({ type: 'error', message: 'Thất bại', desc: 'Có lỗi xảy ra khi thêm mới' });
-    } finally {
-      setCreateLoading(false);
-      setTimeout(() => {
-        setNotification({ type: null, message: null, desc: null });
-      }, 3000);
+    setLoading(true);
+    const formattedData = {
+      ...values,
+      departments: values.departmentIds.map(code => ({ code }))
+    };
+    const response = await createStaff(formattedData);
+    if (response.status === 201 || response.status === 200) {
+      form.resetFields();
+      setShowModal(false);
+      handleSetNotification("success", "Thành công", "Thêm thông tin cán bộ, giảng viên mới thành công.");
+      fetchData();
+    } else {
+      handleSetNotification("error", "Thất bại", response.data.message || 'Đã có lỗi xảy ra khi thêm thông tin đơn vị mới. Vui lòng thử lại sau.');
     }
+    setLoading(false)
+  }
+
+  const importing = async (file) => {
+    setLoading(true);
+    setShowModal(false);
+    const response = await importStaffs(file);
+    if (response.status === 200) {
+      handleSetNotification('success', 'Thành công', 'Import thành công!')
+      fetchData();
+    } else {
+      handleSetNotification("error", "Thất bại", response.data.message || 'Đã có lỗi xảy ra. Vui lòng thử lại sau.');
+    }
+    setLoading(false)
   }
 
   const handleCreate = () => {
@@ -257,7 +262,8 @@ const StaffPage = () => {
     form.resetFields();
     setModal({
       ...modal,
-      title: `Thêm mới CBGV`,
+      isCreateForm: true,
+      title: `Thêm cán bộ, giảng viên mới`,
       form: form,
       formContent: getFormContent(create),
       footer: [
@@ -265,12 +271,12 @@ const StaffPage = () => {
           setShowModal(false);
           form.resetFields();
         }}>Hủy</Button>,
-        <Button key="submit" loading={createLoading} onClick={() => form.submit()}
+        <Button key="submit" onClick={() => form.submit()}
           className='!text-white !bg-[#1890ff] !border-[#1890ff] hover:!bg-[#40a9ff] hover:!border-[#40a9ff]'
-        >Ok
-        </Button>
+        >Ok</Button>
       ],
       onOk: () => form.submit(),
+      onImport: importing,
       onCancel: () => {
         setShowModal(false);
         form.resetFields();
@@ -285,8 +291,8 @@ const StaffPage = () => {
   const getFormContent = (onFinish) => (
     <Form form={form} layout="vertical" onFinish={onFinish}
       initialValues={{
-        staffId: '',
-        fullName: '',
+        id: '',
+        name: '',
         position: '',
         phone: '',
         email: '',
@@ -294,12 +300,12 @@ const StaffPage = () => {
         userID: '',
       }}
     >
-      <Form.Item label="Mã nhân viên" name="staffId"
+      <Form.Item label="Mã nhân viên" name="id"
         rules={[{ required: true, message: 'Vui lòng nhập mã nhân viên!' }]}
       ><Input />
       </Form.Item>
 
-      <Form.Item label="Họ và tên" name="fullName"
+      <Form.Item label="Họ và tên" name="name"
         rules={[{ required: true, message: 'Vui lòng nhập họ và tên!' }]}
       ><Input />
       </Form.Item>
@@ -322,11 +328,6 @@ const StaffPage = () => {
       ><Input />
       </Form.Item>
 
-      <Form.Item label="User ID" name="userID"
-        rules={[{ required: true, message: 'Vui lòng nhập User ID!' }]}
-      ><Input />
-      </Form.Item>
-
       <Form.Item label="Ảnh" name="photo" valuePropName="fileList"
         getValueFromEvent={(e) => e?.fileList}
       >
@@ -345,8 +346,8 @@ const StaffPage = () => {
 
   const fillData = (record) => {
     form.setFieldsValue({
-      staffId: record.staffId,
-      fullName: record.fullName,
+      id: record.id,
+      name: record.name,
       position: record.position,
       phone: record.phone,
       email: record.email,
@@ -357,41 +358,27 @@ const StaffPage = () => {
 
   const deleteStaff = async (record) => {
     setLoading(true);
-    try {
-      const result = await deleteStaffs({ ids: [record.staffId] });
-      if (result.status === 200) {
-        fetchData();
-        setNotification({ type: 'success', message: 'Thành công', desc: 'Xóa thành công' });
-      } else {
-        setNotification({ type: 'error', message: 'Thất bại', desc: result?.message || null });
-      }
-    } catch (error) {
-      setNotification({ type: 'error', message: 'Thất bại', desc: 'Không thể xóa CBGV này' });
-    } finally {
-      setLoading(false);
-      setShowModalDelete(false);
-      setTimeout(() => {
-        setNotification({ type: null, message: null, desc: null });
-      }, 3000);
+    setShowModalDelete(false);
+    const response = await deleteStaffs({ ids: [record.id] });
+    if (response.status === 200) {
+      handleSetNotification('success', 'Thành công', 'Xóa thông tin cán bộ, giảng viên thành công')
+      fetchData();
+    } else {
+      handleSetNotification('error', 'Thất bại', response.data.message || null)
     }
+    setLoading(false)
   };
 
   const handleDelete = async (record) => {
     setShowModalDelete(true);
     setModal({
-      title: `Xóa thông tin CBGV`,
-      showModal: showModalDelete,
+      title: `Xóa thông tin cán bộ, giảng viên`,
       formContent: (
-        <div>
-          <p>Bạn có chắc chắn muốn xóa thông tin CBGV này không?</p>
-          <p><strong>{record.fullName}</strong></p>
-        </div>
+        <p>Bạn có chắc chắn muốn xóa thông tin CBGV <strong>{record.name}</strong> không?</p>
       ),
       footer: [
-        <Button key="cancle" onClick={() => setShowModalDelete(false)}>
-          Hủy
-        </Button>,
-        <Button type="primary"
+        <Button key="cancle" onClick={() => setShowModalDelete(false)}>Hủy</Button>,
+        <Button type="primary" key="delete"
           className="!text-white !bg-[#ff4d4f] !border-[#ff4d4f] hover:!bg-[#ff7875] hover:!border-[#ff7875]"
           onClick={() => deleteStaff(record)}
         >Xóa</Button>
@@ -407,15 +394,15 @@ const StaffPage = () => {
     fillData(record);
     setModal({
       ...modal,
-      title: `Cập nhật thông tin CBGV`,
+      isCreateForm: false,
+      title: `Cập nhật thông tin cán bộ, giảng viên`,
       form: form,
       formContent: getFormContent(update),
       footer: [
         <Button key="cancle" onClick={() => setShowModalUpdate(false)}>Hủy</Button>,
-        <Button key="submit" loading={createLoading} onClick={() => form.submit()}
+        <Button key="submit" loading={loading} onClick={() => form.submit()}
           className='!text-white !bg-[#1890ff] !border-[#1890ff] hover:!bg-[#40a9ff] hover:!border-[#40a9ff]'
-        >Lưu
-        </Button>
+        >Lưu</Button>
       ],
       onOk: () => form.submit(),
       onCancel: () => setShowModalUpdate(false),
@@ -425,50 +412,34 @@ const StaffPage = () => {
 
   const update = async (values) => {
     setLoading(true);
-    try {
-      // Format the data to match the API structure
-      const formattedData = {
-        ...values,
-        // Convert departmentIds array to departments array with code property
-        departments: values.departmentIds.map(code => ({ code }))
-      };
-      
-      const result = await updateStaff(values.staffId, formattedData);
-      if (result.status === 200) {
-        fetchData();
-        setNotification({ type: 'success', message: 'Thành công', desc: 'Cập nhật thông tin thành công' });
-        setShowModalUpdate(false);
-      } else {
-        setNotification({ type: 'error', message: 'Thất bại', desc: result?.message || null });
-      }
-    } catch (error) {
-      setNotification({ type: 'error', message: 'Thất bại', desc: 'Không thể cập nhật thông tin của CBGV này' });
-    } finally {
-      setLoading(false);
-      setTimeout(() => {
-        setNotification({ type: null, message: null, desc: null });
-      }, 3000);
+    const formattedData = {
+      ...values,
+      departments: values.departmentIds.map(code => ({ code }))
+    };
+    const response = await updateStaff(values.id, formattedData);
+    if (response.status === 200) {
+      setShowModalUpdate(false);
+      handleSetNotification('success', 'Thành công', 'Cập nhật thông tin cán bộ, giảng viên thành công')
+      fetchData();
+    } else {
+      handleSetNotification('error', 'Thất bại', response.data.message || null)
     }
+    setLoading(false)
   }
 
   const deleteMultipleStaffs = async () => {
     setLoading(true);
-    try {
-      const ids = selectedRows.map(row => row.staffId);
-      const result = await deleteStaffs({ ids: ids });
-      if (result.status === 200) {
-        fetchData();
-        setNotification({ type: 'success', message: 'Thành công', desc: `Đã xóa ${ids.length} bản ghi thành công` });
-        setShowModal(false);
-        setSelectedRows([]);
-      } else {
-        setNotification({ type: 'error', message: 'Thất bại', desc: result?.message || 'Có lỗi xảy ra' });
-      }
-    } catch (error) {
-      setNotification({ type: 'error', message: 'Thất bại', desc: 'Không thể xóa các bản ghi đã chọn' });
-    } finally {
-      setLoading(false);
+    const ids = selectedRows.map(row => row.id);
+    setShowModalDelete(false);
+    const response = await deleteStaffs({ ids: ids });
+    if (response.status === 200) {
+      setSelectedRows([]);
+      handleSetNotification('success', 'Thành công', `Đã xóa thành công ${ids.length} cán bộ, giảng viên`)
+      fetchData();
+    } else {
+      handleSetNotification('error', 'Thất bại', response.data.message || null)
     }
+    setLoading(false)
   };
 
   const handleDeleteMultiple = () => {
@@ -476,73 +447,70 @@ const StaffPage = () => {
       setNotification({ type: 'warning', message: 'Cảnh báo', desc: 'Vui lòng chọn ít nhất một bản ghi để xóa!' });
       return;
     }
-
+    setShowModalDelete(true);
     setModal({
-      title: `Xóa thông tin CBGV`,
+      title: `Xóa thông tin cán bộ, giảng viên`,
       formContent: (
-        <div>
-          <p>Bạn có chắc chắn muốn xóa {selectedRows.length} bản ghi đã chọn không?</p>
-        </div>
+        <p>Bạn có chắc chắn muốn xóa <strong>{selectedRows.length}</strong> cán bộ, giảng viên đã chọn không?</p>
       ),
       footer: [
         <Button key="cancel" onClick={() => setShowModalDelete(false)}>Hủy</Button>,
-        <Button
-          key="delete"
-          type="primary"
-          danger
+        <Button key="delete" type="primary" danger
           onClick={deleteMultipleStaffs}
-        >Xóa
-        </Button>,
+        >Xóa</Button>,
       ],
+      onOk: () => deleteMultipleStaffs(),
       onCancel: () => setShowModalDelete(false),
+      onClose: () => setShowModalDelete(false),
     });
-    setShowModal(true);
   };
 
   const handleSearch = (value) => {
+    value = value.trim();
     setSearchText(value);
     setTableParams({
       ...tableParams,
-      pagination: {
-        ...tableParams.pagination,
-        current: 1, // Reset to first page when searching
-      },
-    });
-    fetchData({
-      ...tableParams,
-      pagination: {
-        ...tableParams.pagination,
-        current: 1,
-      },
+      pagination: { ...tableParams.pagination, current: 1 },
     });
   };
 
+  useEffect(() => {
+    fetchData({
+      ...tableParams,
+      pagination: { ...tableParams.pagination, current: 1 },
+    });
+  }, [searchText]);
+
   return (
     <>
-      <div className="mb-4 flex justify-between items-center">
-        <SearchInput
-          onSearch={handleSearch}
-          placeholder="Tìm kiếm CBGV..."
+      <div className="px-12 py-8">
+        <div className="mb-4 flex justify-between items-center">
+          <SearchInput
+            onSearch={handleSearch}
+            placeholder="Tìm tên, số điện thoại, email..."
+            loading={loading}
+          />
+        </div>
+        <Notification noti={notification} />
+        <Modal showModal={showModal} modal={modal} />
+        <Modal showModal={showModalDelete} modal={modal} />
+        <Modal showModal={showModalUpdate} modal={modal} />
+        <Modal showModal={showModalView} modal={modal} />
+        <Table
+          title={'Danh bạ cán bộ, giảng viên'}
+          columns={columns}
           loading={loading}
-        />
+          data={data}
+          tableParams={tableParams}
+          onCreate={handleCreate}
+          onExport={exporting}
+          onDeleteMultiple={handleDeleteMultiple}
+          setSelectedRows={setSelectedRows}
+          fetchData={fetchData}
+          onChange={handleTableChange}
+          onRow={handleView}
+          rowKey="id" />
       </div>
-      <Notification noti={notification} />
-      <Modal showModal={showModal} modal={modal} />
-      <Modal showModal={showModalDelete} modal={modal} />
-      <Modal showModal={showModalUpdate} modal={modal} />
-      <Modal showModal={showModalView} modal={modal} />
-      <Table
-        title={'CBGV'}
-        columns={columns}
-        loading={loading}
-        data={data}
-        tableParams={tableParams}
-        onCreate={handleCreate}
-        onDeleteMultiple={handleDeleteMultiple} 
-        setSelectedRows={setSelectedRows}
-        fetchData={fetchData}
-        onChange={handleTableChange}
-        rowKey="staffId"/>
     </>
   );
 };

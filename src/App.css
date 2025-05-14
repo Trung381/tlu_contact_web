@@ -37,3 +37,34 @@
     transform: rotate(360deg);
   }
 }
+
+.table-custom .ant-table-cell {
+  padding: 0px !important;
+}
+
+/* .ant-table-cell {
+  padding: 0px !important;
+} */
+
+.ant-table-title {
+  padding: 0px !important;
+  padding-bottom: 8px !important;
+}
+
+.ant-pagination {
+  margin-bottom: 0px !important;
+}
+
+.link-custom:active {
+  background-color: #0f6ef4 !important;
+}
+
+.item-menu-custom:active {
+  background-color: #ffffff !important;
+  color: #1b1718 !important;
+}
+
+.menu-custom:active {
+  background-color: #ffffff !important;
+  color: #1b1718 !important;
+}

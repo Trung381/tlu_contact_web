@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Select } from 'antd';
 import { getDepartmentTypes } from '../services/api';
+import authService from '../services/authService';
 
 const DepartmentTypeSelect = ({ value, onChange, placeholder = "Chọn loại đơn vị", mode = "single" }) => {
   const [departmentTypes, setDepartmentTypes] = useState([]);
@@ -9,18 +10,18 @@ const DepartmentTypeSelect = ({ value, onChange, placeholder = "Chọn loại đ
   useEffect(() => {
     const fetchDepartmentTypes = async () => {
       setLoading(true);
-      try {
-        const result = await getDepartmentTypes();
-        const formattedTypes = result.data.map(type => ({
+      const response = await getDepartmentTypes();
+      if (response.status === 200) {
+        const formattedTypes = response.data.data.map(type => ({
           label: type.name,
           value: type.id
         }));
         setDepartmentTypes(formattedTypes);
-      } catch (error) {
-        console.error('Error fetching department types:', error);
-      } finally {
-        setLoading(false);
+      } else if (response.status === 401) {
+        authService.refreshToken();
+        fetchDepartmentTypes()
       }
+      setLoading(false);
     };
 
     fetchDepartmentTypes();

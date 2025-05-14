@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext } from 'react';
 import authService from '../services/authService';
 
 // Tạo context cho authentication
@@ -26,16 +26,15 @@ export const AuthProvider = ({ children }) => {
   // Đăng nhập
   const login = async (email, password) => {
     setIsLoading(true);
-    const result = await authService.login(email, password);
+    const response = await authService.login(email, password);
     
-    if (result.success) {
-      setUser(result.user);
-      setIsAuthenticated(true);
+    if (response.status === 200) {
+      setUser(authService.getCurrentUser());
+      setIsAuthenticated(authService.isAuthenticated());
     }
-    
     setIsLoading(false);
-    return result;
-  };
+    return response;
+  }
 
   // Đăng ký
   const register = async (userData) => {

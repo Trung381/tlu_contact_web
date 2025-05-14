@@ -7,6 +7,7 @@ const routes = {
   department: '/department',
   departmentType: '/department-type',
   contact: '/contact',
+  user: '/user',
   login: '/login',
   register: '/register',
   profile: '/profile',
