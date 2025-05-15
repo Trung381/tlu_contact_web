@@ -11,7 +11,8 @@ const routes = {
   login: '/login',
   register: '/register',
   profile: '/profile',
-  resetPassword: '/resetPassword',
+  forgetPassword: '/forget-password',
+  changePassword: '/change-password',
   notFound: '*'
 };
 

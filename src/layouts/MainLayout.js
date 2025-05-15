@@ -94,6 +94,7 @@ const MainLayout = () => {
                   </div>
                 )}
               </li>
+              <li><NavLink to={routes.changePassword} className={({ isActive }) => `link-custom font-semibold px-2 py-1 rounded-md hover:bg-[#4096ff] hover:text-white ${isActive && `bg-[#1677ff] text-white font-semibold`}`} onClick={() => setIsOpen(false)}>Đặt lại mật khẩu</NavLink></li>
               {isAuthenticated ? (
                 <li>
                   <button onClick={() => { setIsOpen(false); handleLogout() }} className={`font-semibold px-2 py-1 hover:bg-[#4096ff] hover:text-white`}>
@@ -132,7 +133,7 @@ const MainLayout = () => {
             <div className='gap-3'>
               <span className="font-bold uppercase">Liên kết</span>
               <div>
-                <p className='mb-2'><a href="https://www.tlu.edu.vn" target="_blank" rel="noopener noreferrer" className="link link-hover">Website trường</a></p>
+                <p className='mb-2'><a href="https://www.tlu.edu.vn" target="_blank" rel="noopener noreferrer" className="link link-hover">Website chính thức</a></p>
                 <p className='mb-2'><a href="https://www.tlu.edu.vn/lien-he" target="_blank" rel="noopener noreferrer" className="link link-hover">Liên hệ</a></p>
                 <p className='mb-2'><a href="https://www.tlu.edu.vn/dao-tao" target="_blank" rel="noopener noreferrer" className="link link-hover">Đào tạo</a></p>
               </div>
@@ -148,9 +149,9 @@ const MainLayout = () => {
             <div className='gap-3'>
               <span className="font-bold uppercase">Liên hệ hỗ trợ</span>
               <div>
-                <p className='mb-2'>Phòng Công tác sinh viên</p>
+                <p className='mb-2'>Phòng Chính trị và Công tác sinh viên</p>
                 <p className='mb-2'>Điện thoại: (024) - 38522201</p>
-                <p className='mb-2'>Email: phonghcth@tlu.edu.vn</p>
+                <p className='mb-2'>Email: p7@tlu.edu.vn</p>
               </div>
             </div>
           </div>

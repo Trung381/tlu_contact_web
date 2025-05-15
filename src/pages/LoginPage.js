@@ -11,7 +11,7 @@ const LoginPage = () => {
   const [notification, setNotification] = useState(null);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState("000000");
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -87,12 +87,12 @@ const LoginPage = () => {
             <img
               src={logoTLU}
               alt="TLU Contact Logo"
-              className="h-24 mb-4"
+              className="h-24 mb-2"
             />
             <h2 className="text-2xl font-semibold text-blue-600">TLU Contact - AMS</h2>
           </div>
           {/* Form đăng nhập */}
-          <form onSubmit={handleLogin} className="mt-4">
+          <form onSubmit={handleLogin} className="mt-5">
             <div className="mb-4">
               <label className="block text-gray-700 text-base pb-1">Email</label>
               <div className="relative">

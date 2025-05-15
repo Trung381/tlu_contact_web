@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaEnvelope, FaArrowLeft, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { FaEnvelope } from 'react-icons/fa';
 import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 import Button from '../components/Button';
 import { toast } from 'react-toastify';

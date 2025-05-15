@@ -207,7 +207,7 @@ const DepartmentPage = () => {
         <Tooltip title='Nhấp để cập nhật ảnh'>
           <Spin spinning={loadingUploadPhoto} indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />}>
             <img
-              onClick={handlePhotoClick}
+              // onClick={handlePhotoClick}
               src={record.photo ? record.photo : `/tlu.png`}
               alt="photo"
               className={`w-32 h-32 rounded-full object-cover border-2 border-solid border-blue-600 cursor-pointer ${loadingUploadPhoto ? 'animate-pulse' : ''}`}
@@ -267,7 +267,7 @@ const DepartmentPage = () => {
             <div className="col-span-2">
               <p className="font-medium">Đơn vị trực thuộc:</p>
               <div className="ms-2 mt-2 max-h-60 overflow-y-auto border border-gray-200 rounded-md p-2">
-                <ChildDepartmentsList parentId={record.id} />
+                <ChildDepartmentsList parentId={record.id} viewDetail={handleView} />
               </div>
             </div>
           </div>
@@ -282,7 +282,7 @@ const DepartmentPage = () => {
     });
   };
 
-  const ChildDepartmentsList = ({ parentId }) => {
+  const ChildDepartmentsList = ({ parentId, viewDetail }) => {
     const [childDepartments, setChildDepartments] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -313,8 +313,11 @@ const DepartmentPage = () => {
           <li key={dept.id} className="py-2">
             <div className="flex justify-between">
               <div>
-                <p className="font-medium">{dept.name}</p>
-                <p className="text-sm text-gray-500">{dept.id}</p>
+                <p
+                  className="text-blue-600 cursor-pointer"
+                  onClick={() => viewDetail(dept)}
+                >{dept.name}</p>
+                {/* <p className="text-sm text-gray-500">{dept.id}</p> */}
               </div>
             </div>
           </li>
@@ -424,8 +427,12 @@ const DepartmentPage = () => {
       ><Input />
       </Form.Item>
 
+      <Form.Item label="Thuộc đơn vị" name="parentDepartmentId">
+        <DepartmentSelect value={parentDepartmentId} onChange={setParentDepartmentId} />
+      </Form.Item>
+
       <Form.Item label="Địa chỉ" name="address"
-        rules={[{ required: true, message: 'Vui lòng nhập địa chỉ!' }]}
+      // rules={[{ required: true, message: 'Vui lòng nhập địa chỉ!' }]}
       ><Input />
       </Form.Item>
 
@@ -440,10 +447,6 @@ const DepartmentPage = () => {
           { type: 'email', message: 'Email không hợp lệ!' }
         ]}
       ><Input />
-      </Form.Item>
-
-      <Form.Item label="Đơn vị cấp trên" name="parentDepartmentId">
-        <DepartmentSelect value={parentDepartmentId} onChange={setParentDepartmentId} />
       </Form.Item>
 
       <Form.Item label="Ảnh" name="photo" valuePropName="fileList"

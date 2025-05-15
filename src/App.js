@@ -8,18 +8,18 @@ import MainLayout from './layouts/MainLayout';
 
 // Pages 
 import HomePage from './pages/HomePage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
+import ForgetPasswordPage from './pages/ForgetPasswordPage';
 import LoginPage from './pages/LoginPage';
 import Staff from './pages/StaffPage';
 import Student from './pages/StudentPage';
 import Department from './pages/DepartmentPage';
 import DepartmentType from './pages/DepartmentTypePage';
 import User from './pages/UserPage';
+import ChangePassword from './pages/ChangePasswordPage'
 
 const AboutPage = () => <div className="min-h-[60vh] flex items-center justify-center"><h1 className="text-3xl font-bold">Trang Giới Thiệu</h1></div>;
 const ContactPage = () => <div className="min-h-[60vh] flex items-center justify-center"><h1 className="text-3xl font-bold">Trang Liên Hệ</h1></div>;
 const RegisterPage = () => <div className="min-h-[60vh] flex items-center justify-center"><h1 className="text-3xl font-bold">Trang Đăng Ký</h1></div>;
-const ProfilePage = () => <div className="min-h-[60vh] flex items-center justify-center"><h1 className="text-3xl font-bold">Trang Cá Nhân</h1></div>;
 const NotFoundPage = () => <div className="min-h-[60vh] flex items-center justify-center"><h1 className="text-3xl font-bold">404 - Trang không tồn tại!</h1></div>;
 
 // Protected Route component
@@ -73,12 +73,12 @@ function App() {
             <Route path={routes.department} element={<ProtectedRoute><Department /></ProtectedRoute>} />
             <Route path={routes.departmentType} element={<ProtectedRoute><DepartmentType /></ProtectedRoute>} />
             <Route path={routes.user} element={<ProtectedRoute><User /></ProtectedRoute>} />
-            <Route path={routes.profile} element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+            <Route path={routes.changePassword} element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
           </Route>
 
           <Route path={routes.login} element={<LoginPage />} />
           <Route path={routes.register} element={<RegisterPage />} />
-          <Route path={routes.resetPassword} element={<ResetPasswordPage />} />
+          <Route path={routes.forgetPassword} element={<ForgetPasswordPage />} />
 
           {/* Route 404 */}
           <Route path={routes.notFound} element={<NotFoundPage />} />

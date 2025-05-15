@@ -305,32 +305,34 @@ const UserPage = () => {
 
   return (
     <>
-      <div className="mb-4 flex justify-between items-center">
-        <SearchInput
-          onSearch={handleSearch}
-          placeholder="Tìm mã số, tên, số điện thoại, email..."
+      <div className='px-12 py-10'>
+        <div className="mb-4 flex justify-between items-center">
+          <SearchInput
+            onSearch={handleSearch}
+            placeholder="Tìm mã số, tên, số điện thoại, email..."
+            loading={loading}
+          />
+        </div>
+        <Notification noti={notification} />
+        <Modal showModal={showModalDelete} modal={modal} />
+        <Modal showModal={showModalView} modal={modal} />
+        <Modal showModal={showModalResetPassword} modal={modal} />
+        <Table
+          title={'Tài khoản người dùng hệ thống'}
+          columns={columns}
           loading={loading}
+          data={data}
+          tableParams={tableParams}
+          onCreate={() => { }}
+          onExport={exporting}
+          onDeleteMultiple={handleDeleteMultiple}
+          setSelectedRows={setSelectedRows}
+          fetchData={fetchData}
+          onChange={handleTableChange}
+          onRow={handleView}
+          rowKey="id"
         />
       </div>
-      <Notification noti={notification} />
-      <Modal showModal={showModalDelete} modal={modal} />
-      <Modal showModal={showModalView} modal={modal} />
-      <Modal showModal={showModalResetPassword} modal={modal} />
-      <Table
-        title={'Tài khoản người dùng hệ thống'}
-        columns={columns}
-        loading={loading}
-        data={data}
-        tableParams={tableParams}
-        onCreate={() => { }}
-        onExport={exporting}
-        onDeleteMultiple={handleDeleteMultiple}
-        setSelectedRows={setSelectedRows}
-        fetchData={fetchData}
-        onChange={handleTableChange}
-        onRow={handleView}
-        rowKey="id"
-      />
     </>
   );
 };

@@ -10,10 +10,10 @@ const DepartmentSelect = ({ value, onChange, placeholder = "Chọn đơn vị", 
     const fetchDepartments = async () => {
       setLoading(true);
       try {
-        const result = await getDepartments(0, 100, null, false);
-        const formattedDepartments = result.data.map(dept => ({
+        const result = await getDepartments(0, 100000, true, null, false, null);
+        const formattedDepartments = result.data.data.map(dept => ({
           label: dept.name,
-          value: dept.code
+          value: dept.id
         }));
         setDepartments(formattedDepartments);
       } catch (error) {

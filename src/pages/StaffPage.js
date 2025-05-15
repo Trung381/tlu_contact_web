@@ -104,7 +104,7 @@ const StaffPage = () => {
             />
             <div>
               <h3 className="text-lg font-semibold">{record.name}</h3>
-              <p className="text-gray-600">Mã nhân viên: {record.id}</p>
+              <p className="text-gray-600">Mã số: {record.id}</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -121,7 +121,7 @@ const StaffPage = () => {
               {record.departments && record.departments.length > 0 ? (
                 <ul className="list-disc pl-5 mt-1">
                   {record.departments.map((dep, index) => (
-                    <li key={index}>{dep.name}</li>
+                    <li key={index} className='text-blue-600 cursor-pointer'>{dep.name}</li>
                   ))}
                 </ul>
               ) : (
@@ -300,7 +300,7 @@ const StaffPage = () => {
         userID: '',
       }}
     >
-      <Form.Item label="Mã nhân viên" name="id"
+      <Form.Item label="Mã số" name="id"
         rules={[{ required: true, message: 'Vui lòng nhập mã nhân viên!' }]}
       ><Input />
       </Form.Item>
@@ -308,6 +308,12 @@ const StaffPage = () => {
       <Form.Item label="Họ và tên" name="name"
         rules={[{ required: true, message: 'Vui lòng nhập họ và tên!' }]}
       ><Input />
+      </Form.Item>
+
+      <Form.Item label="Đơn vị" name="departmentIds"
+        rules={[{ required: true, message: 'Vui lòng chọn đơn vị!' }]}
+      >
+        <DepartmentSelect mode="multiple" />
       </Form.Item>
 
       <Form.Item label="Chức vụ" name="position"
@@ -334,12 +340,6 @@ const StaffPage = () => {
         <Upload action="/upload.do" listType="picture" maxCount={1} showUploadList={false}>
           <Button icon={<UploadOutlined />}>Tải ảnh lên</Button>
         </Upload>
-      </Form.Item>
-
-      <Form.Item label="Đơn vị" name="departmentIds"
-        rules={[{ required: true, message: 'Vui lòng chọn đơn vị!' }]}
-      >
-        <DepartmentSelect mode="multiple" />
       </Form.Item>
     </Form>
   )

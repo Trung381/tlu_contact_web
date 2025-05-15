@@ -105,7 +105,7 @@ const DepartmentTypePage = () => {
     const response = await deleteDepartmentTypes({ ids: ids });
     if (response.status === 200) {
       setSelectedRows([]);
-      handleSetNotification('success', 'Thành công', `Đã xóa thành công ${ids.length} loại đơn vị` )
+      handleSetNotification('success', 'Thành công', `Đã xóa thành công ${ids.length} loại đơn vị`)
       fetchData();
     } else {
       handleSetNotification('error', 'Thất bại', response.data.message || null)
@@ -171,7 +171,7 @@ const DepartmentTypePage = () => {
     setModal({
       title: `Xóa thông tin loại phòng ban`,
       formContent: (
-          <p>Bạn có chắc chắn muốn xóa thông tin loại phòng ban <strong>{record.name}</strong> không?</p>
+        <p>Bạn có chắc chắn muốn xóa thông tin loại phòng ban <strong>{record.name}</strong> không?</p>
       ),
       footer: [
         <Button key="cancle" onClick={() => setShowModalDelete(false)}>
@@ -233,9 +233,16 @@ const DepartmentTypePage = () => {
   const columns = [{
     title: 'Tên loại phòng ban',
     dataIndex: 'name',
-    sorter: true,
+    // sorter: true,
     render: name => `${name}`,
-    width: '80%',
+    width: '40%',
+  },
+  {
+    title: 'Mô tả',
+    dataIndex: 'desc',
+    // sorter: true,
+    render: desc => desc ? `${desc}` : "",
+    width: '40%',
   },
   {
     title: 'Hành động',
@@ -264,23 +271,25 @@ const DepartmentTypePage = () => {
 
   return (
     <>
-      <Notification noti={notification} />
-      <Modal showModal={showModalCreate} modal={modal} />
-      <Modal showModal={showModalDelete} modal={modal} />
-      <Modal showModal={showModalUpdate} modal={modal} />
-      <Table
-        title={'Loại phòng ban'}
-        columns={columns}
-        loading={loading}
-        data={data}
-        tableParams={tableParams}
-        onCreate={handleCreate}
-        onDeleteMultiple={handleDeleteMultiple}
-        setSelectedRows={setSelectedRows}
-        fetchData={fetchData}
-        onRow={handleEdit}
-        onExport={() => {}}
-        rowKey="id" />
+      <div className='px-12 py-10'>
+        <Notification noti={notification} />
+        <Modal showModal={showModalCreate} modal={modal} />
+        <Modal showModal={showModalDelete} modal={modal} />
+        <Modal showModal={showModalUpdate} modal={modal} />
+        <Table
+          title={'Loại phòng ban'}
+          columns={columns}
+          loading={loading}
+          data={data}
+          tableParams={tableParams}
+          onCreate={handleCreate}
+          onDeleteMultiple={handleDeleteMultiple}
+          setSelectedRows={setSelectedRows}
+          fetchData={fetchData}
+          onRow={handleEdit}
+          onExport={() => { }}
+          rowKey="id" />
+      </div>
     </>
   );
 };
