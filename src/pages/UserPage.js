@@ -3,9 +3,9 @@ import Notification from '../components/Notification';
 import Modal from '../components/Modal';
 import Table from '../components/Table';
 import { Tooltip, Button } from 'antd';
-import { DeleteOutlined, EyeOutlined, KeyOutlined } from '@ant-design/icons';
+import { DeleteOutlined, KeyOutlined, CheckOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { getUsers, deleteUsers, exportUsers, resetUserPassword } from '../services/api';
+import { getUsers, deleteUsers, exportUsers, resetUserPassword, verifyUser } from '../services/api';
 import SearchInput from '../components/SearchInput';
 
 const UserPage = () => {
@@ -14,10 +14,11 @@ const UserPage = () => {
   const [data, setData] = useState([]);
   const [tableParams, setTableParams] = useState({
     pagination: { current: 1, pageSize: 20, },
+    sorting: true,
   });
   const [showModalDelete, setShowModalDelete] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [showModalView, setShowModalView] = useState(false);
+  const [showModalVerify, setShowModalVerify] = useState(false);
   const [showModalResetPassword, setShowModalResetPassword] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [modal, setModal] = useState({
@@ -38,7 +39,7 @@ const UserPage = () => {
 
   const fetchData = async (params = tableParams) => {
     setLoading(true);
-    const response = await getUsers(params.pagination.current - 1, params.pagination.pageSize, false, searchText, false);
+    const response = await getUsers(params.pagination.current - 1, params.pagination.pageSize, params.sorting, searchText, false);
     setLoading(false);
     if (response.status === 200) {
       setData(response.data.data)
@@ -81,8 +82,12 @@ const UserPage = () => {
   }
 
   const handleTableChange = (pagination, filters, sorter) => {
-    setTableParams({ pagination, filters, ...sorter, });
-    fetchData({ pagination, filters, ...sorter, });
+    let sort = sorter.order === "ascend" ? true : (sorter.order === "descend" ? false : true)
+    setTableParams({
+      pagination, filters,
+      sorting: sort
+    });
+    fetchData({ pagination, sorting: sort });
   };
 
   const deleteUser = async (record) => {
@@ -111,47 +116,6 @@ const UserPage = () => {
       handleSetNotification('error', 'Thất bại', response.data.message || null)
     }
     setLoading(false)
-  };
-
-  const handleView = (record) => {
-    setShowModalView(true);
-    setModal({
-      title: `Thông tin tài khoản người dùng`,
-      formContent: (
-        <div className="space-y-4">
-          <div className="flex items-center space-x-4">
-            <img
-              src={record.photo ? record.photo : `/avatar.png`}
-              alt="avatar"
-              className="w-32 h-32 rounded-full object-cover"
-            />
-            <div>
-              <h3 className="text-lg font-semibold">{record.name}</h3>
-              <p className="text-gray-600">Mã số: {record.code}</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="font-medium">Email:</p>
-              <p>{record.email || "Chưa cập nhật"}</p>
-            </div>
-            <div>
-              <p className="font-medium">Ngày tạo:</p>
-              <p>{record.createdAt || "Chưa cập nhật"}</p>
-            </div>
-            <div>
-              <p className="font-medium">Đăng nhập lần cuối:</p>
-              <p>{record.lastLogin || "Chưa cập nhật"}</p>
-            </div>
-          </div>
-        </div>
-      ),
-      footer: [
-        <Button key="close" onClick={() => setShowModalView(false)}>Đóng</Button>
-      ],
-      onCancel: () => setShowModalView(false),
-      onClose: () => setShowModalView(false)
-    });
   };
 
   const handleDelete = async (record) => {
@@ -198,17 +162,52 @@ const UserPage = () => {
   };
 
   const handleSearch = (value) => {
-    if (value.trim() === "") return;
+    value = value.trim();
     setSearchText(value);
     setTableParams({
       ...tableParams,
       pagination: { ...tableParams.pagination, current: 1 },
     });
+  };
+
+  useEffect(() => {
     fetchData({
       ...tableParams,
       pagination: { ...tableParams.pagination, current: 1 },
     });
-  };
+  }, [searchText]);
+
+  const verify = async (id) => {
+    setShowModalVerify(true);
+    const response = await verifyUser(id);
+    setShowModalVerify(false);
+    if (response.status === 200) {
+      handleSetNotification('success', 'Thành công', response.data.message || null)
+      fetchData();
+    } else {
+      handleSetNotification('error', 'Thất bại', response.data.message || null)
+    }
+  }
+
+  const handleVerifyEmail = (record) => {
+    setShowModalVerify(true);
+    setModal({
+      title: `Xác thực email cho tài khoản người dùng hệ thống`,
+      formContent: (
+        <p>Bạn có chắc chắn muốn xác thực email cho tài khoản <strong>{record.email}</strong> không?</p>
+      ),
+      footer: [
+        <Button key="cancle" onClick={() => setShowModalVerify(false)}>Hủy</Button>,
+        <Button key="verify" type="primary"
+          className="!text-white !bg-[#1890ff] !border-[#1890ff] hover:!bg-[#40a9ff] hover:!border-[#40a9ff]"
+          onClick={() => verify(record.id)}
+        >Xác thực</Button>
+      ],
+      onOk: () => verify(record.id),
+      onCancel: () => setShowModalVerify(false),
+      onClose: () => setShowModalVerify(false)
+    });
+  }
 
   const columns = [
     {
@@ -216,26 +215,38 @@ const UserPage = () => {
       dataIndex: 'id',
       key: 'id',
       render: id => `${id}`,
-      width: 100,
+      width: 270,
     },
     {
       title: 'Email',
       dataIndex: 'email',
-      sorter: true,
       render: email => `${email}`,
-      width: 250,
+      width: 220,
+    },
+    {
+      title: 'Trạng thái',
+      dataIndex: 'isEmailVerified',
+      filters: [
+        { text: 'Chưa xác thực', value: false },
+        { text: 'Đã xác thực', value: true },
+      ],
+      onFilter: (value, record) => record.isEmailVerified === value,
+      render: verified => verified
+        ? <span className="text-green-600">Đã xác thực</span>
+        : <span className="text-red-600">Chưa xác thực</span>,
+      width: 150,
     },
     {
       title: 'Ngày tạo',
       dataIndex: 'createdAt',
-      render: date => dayjs(date).format('DD/MM/YYYY HH:mm:ss'),
-      width: 250,
+      render: date => date ? dayjs(date).format('DD/MM/YYYY HH:mm:ss') : 'Chưa cập nhật',
+      width: 170,
     },
     {
       title: 'Đăng nhập gần nhất',
       dataIndex: 'lastedLoginAt',
-      render: date => dayjs(date).format('DD/MM/YYYY HH:mm:ss'),
-      width: 250,
+      render: date => date ? dayjs(date).format('DD/MM/YYYY HH:mm:ss') : 'Chưa cập nhật',
+      width: 170,
     },
     {
       title: 'Hành động',
@@ -245,7 +256,7 @@ const UserPage = () => {
           <Tooltip title="Đặt lại mật khẩu">
             <Button
               icon={<KeyOutlined />}
-              onClick={() => handleResetPassword(record)}
+              onClick={() => handleResetPassword(record.id, record.email)}
               type="link"
               style={{ color: 'orange' }}
             />
@@ -258,26 +269,27 @@ const UserPage = () => {
               style={{ color: 'red' }}
             />
           </Tooltip>
-          <Tooltip title="Chi tiết">
+          <Tooltip title="Xác thực email">
             <Button
-              icon={<EyeOutlined />}
-              onClick={() => handleView(record)}
+              icon={<CheckOutlined />}
+              onClick={() => handleVerifyEmail(record)}
               type="link"
-              style={{ color: 'green' }}
+              style={{ color: 'blue' }}
             />
           </Tooltip>
         </div>
       ),
-      with: 110,
+      // with: 120,
     },
   ];
 
   const handleResetPassword = (id, email) => {
+    console.log(id, email);
     const resetPW = async (id, email) => {
       setLoading(true);
       const response = await resetUserPassword(id, email);
       setLoading(false);
-      if (response.status === 200) {
+      if (response.status == 200) {
         handleSetNotification('success', 'Đặt lại mật khẩu thành công', null);
       } else {
         handleSetNotification('error', 'Thất bại', response.data.message || null)
@@ -315,7 +327,7 @@ const UserPage = () => {
         </div>
         <Notification noti={notification} />
         <Modal showModal={showModalDelete} modal={modal} />
-        <Modal showModal={showModalView} modal={modal} />
+        <Modal showModal={showModalVerify} modal={modal} />
         <Modal showModal={showModalResetPassword} modal={modal} />
         <Table
           title={'Tài khoản người dùng hệ thống'}
@@ -329,7 +341,7 @@ const UserPage = () => {
           setSelectedRows={setSelectedRows}
           fetchData={fetchData}
           onChange={handleTableChange}
-          onRow={handleView}
+          // onRow={handleView}
           rowKey="id"
         />
       </div>

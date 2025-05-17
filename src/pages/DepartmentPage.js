@@ -8,6 +8,7 @@ import { getDepartments, createDepartments, updateDepartments, deleteDepartments
 import DepartmentSelect from '../components/DepartmentSelect';
 import DepartmentTypeSelect from '../components/DepartmentTypeSelect';
 import SearchInput from '../components/SearchInput';
+import Photo from '../components/Photo';
 
 const DepartmentPage = () => {
   const [showModalCreate, setShowModalCreate] = useState(false);
@@ -16,6 +17,8 @@ const DepartmentPage = () => {
   const [data, setData] = useState([]);
   const [tableParams, setTableParams] = useState({
     pagination: { current: 1, pageSize: 20, },
+    sorting: true,
+    filter: null
   });
   const [showModalDelete, setShowModalDelete] = useState(false);
   const [showModalUpdate, setShowModalUpdate] = useState(false);
@@ -38,7 +41,6 @@ const DepartmentPage = () => {
   const [showModalView, setShowModalView] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [loadingUploadPhoto, setLoadingUploadPhoto] = useState(false);
-  const [photo, setPhoto] = useState(null);
 
   const handleSetNotification = (type, msg, desc) => {
     setNotification({ type: type, message: msg, desc: desc })
@@ -46,7 +48,7 @@ const DepartmentPage = () => {
 
   const fetchData = async (params = tableParams) => {
     setLoading(true);
-    const response = await getDepartments(params.pagination.current - 1, params.pagination.pageSize, true, searchText, false, null);
+    const response = await getDepartments(params.pagination.current - 1, params.pagination.pageSize, params.sorting, searchText, false, params.filter);
     setLoading(false);
     if (response.status === 200) {
       setData(response.data.data)
@@ -116,8 +118,12 @@ const DepartmentPage = () => {
   }
 
   const handleTableChange = (pagination, filters, sorter) => {
-    setTableParams({ pagination, filters, ...sorter, });
-    fetchData({ pagination, filters, ...sorter, });
+    let sort = sorter.order === "ascend" ? true : (sorter.order === "descend" ? false : true)
+    setTableParams({
+      pagination, filters,
+      sorting: sort
+    });
+    fetchData({ pagination, filters, sorting: sort, });
   };
 
   const fillData = (record) => {
@@ -175,54 +181,21 @@ const DepartmentPage = () => {
     setLoading(false)
   };
 
-  const uploadDepartmentPhoto = async (file) => {
+  const uploadDepartmentPhoto = async (file, id) => {
     setLoadingUploadPhoto(true);
-    const response = await uploadPhoto(file, 'department');
+    const response = await uploadPhoto(file, 'department', id);
     setLoadingUploadPhoto(false);
     if (response.status === 200) {
       handleSetNotification('success', 'Thành công', 'Cập nhật ảnh thành công')
+      const updated = await getDepartmentById(id);
+      if (updated.status == 200) {
+        // Cập nhật lại modal view với record mới nhất
+        handleView(updated.data.data);
+      }
+      fetchData(tableParams);
     } else {
       handleSetNotification("error", "Thất bại", response.data.message || 'Đã có lỗi xảy ra. Vui lòng thử lại sau.');
     }
-  }
-
-  const Photo = ({ loadingUploadPhoto, record }) => {
-    const fileInputRef = useRef(null);
-
-    const handlePhotoClick = () => {
-      if (fileInputRef.current) {
-        fileInputRef.current.click();
-      }
-    };
-
-    const handleFileChange = async (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        await uploadDepartmentPhoto(file);
-      }
-    };
-
-    return (
-      <>
-        <Tooltip title='Nhấp để cập nhật ảnh'>
-          <Spin spinning={loadingUploadPhoto} indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />}>
-            <img
-              // onClick={handlePhotoClick}
-              src={record.photo ? record.photo : `/tlu.png`}
-              alt="photo"
-              className={`w-32 h-32 rounded-full object-cover border-2 border-solid border-blue-600 cursor-pointer ${loadingUploadPhoto ? 'animate-pulse' : ''}`}
-            />
-          </Spin>
-        </Tooltip>
-        <input
-          type="file"
-          ref={fileInputRef}
-          style={{ display: 'none' }}
-          accept="image/*"
-          onChange={handleFileChange}
-        />
-      </>
-    )
   }
 
   const handleView = (record) => {
@@ -232,18 +205,7 @@ const DepartmentPage = () => {
       formContent: (
         <div className="space-y-4">
           <div className="flex items-center space-x-4">
-            {/* <Tooltip title='Nhấp để cập nhật ảnh'>
-              <Spin spinning={loadingUploadPhoto} indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />}>
-                <img
-                  key={loadingUploadPhoto ? "loading" : "loaded"}
-                  onClick={() => uploadDepartmentPhoto(null)}
-                  src={record.photo ? record.photo : `/tlu.png`}
-                  alt="photo"
-                  className={`w-32 h-32 rounded-full object-cover border-2 border-solid border-blue-600 cursor-pointer ${loadingUploadPhoto ? 'animate-pulse' : ''}`}
-                />
-              </Spin>
-            </Tooltip> */}
-            <Photo loadingUploadPhoto={loadingUploadPhoto} record={record} />
+            <Photo loadingUploadPhoto={loadingUploadPhoto} record={record} upload={uploadDepartmentPhoto} />
             <div>
               <h3 className="text-lg font-semibold">{record.name}</h3>
               <p><span className="font-medium">Mã đơn vị: </span>{record.id}</p>
@@ -343,6 +305,9 @@ const DepartmentPage = () => {
     title: 'Tên đơn vị',
     dataIndex: 'name',
     sorter: true,
+    showSorterTooltip: {
+      title: 'Sắp xếp theo tên đơn vị',
+    },
     render: name => `${name}`,
     width: 180,
   },
@@ -353,16 +318,16 @@ const DepartmentPage = () => {
     width: 250,
   },
   {
-    title: 'Số điện thoại',
-    dataIndex: 'phone',
-    render: phone => `${phone || 'Chưa cập nhật'}`,
-    width: 120,
-  },
-  {
     title: 'Email',
     dataIndex: 'email',
     render: email => `${email || 'Chưa cập nhật'}`,
     width: 230,
+  },
+  {
+    title: 'Điện thoại',
+    dataIndex: 'phone',
+    render: phone => `${phone || 'Chưa cập nhật'}`,
+    width: 120,
   },
   {
     title: 'Hành động',
@@ -624,7 +589,7 @@ const DepartmentPage = () => {
         <Modal showModal={showModalCreate} modal={modal} />
         <Modal showModal={showModalDelete} modal={modal} />
         <Modal showModal={showModalUpdate} modal={modal} />
-        <Modal showModal={showModalView} modal={modal} />
+        <Modal showModal={showModalView} modal={modal} loadingUploadPhoto={loadingUploadPhoto} />
         <Table
           title={'Danh bạ đơn vị'}
           columns={columns}

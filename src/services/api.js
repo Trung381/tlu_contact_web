@@ -78,8 +78,8 @@ let getStaffs = async (page = 0, size = 20, sort = true, search = null, deleted 
 
 let getStaffById = async (id) => {
   try {
-    const response = await apiClient.get(`/api/v1/staffs/${id}`);
-    return response.data;
+    const response = await apiClient.get(`/api/v1/staff/${id}`);
+    return response;
   } catch (error) {
     throw error.response;
   }
@@ -388,10 +388,11 @@ let resetUserPassword = async (uid, email) => {
   }
 }
 
-let uploadPhoto = async (file, type) => {
+let uploadPhoto = async (file, type, id) => {
   try {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('id', id);
     let endpoint = null;
     switch (type) {
       case 'department': endpoint = '/api/v1/department/avatar/upload'; break;
@@ -399,7 +400,7 @@ let uploadPhoto = async (file, type) => {
       case 'student': endpoint = '/api/v1/student/avatar/upload'; break;
     }
     if (!endpoint) {
-      return {status: 404};
+      return { status: 404 };
     }
     const response = await apiClient.post(endpoint, formData, {
       headers: {
@@ -412,11 +413,31 @@ let uploadPhoto = async (file, type) => {
   }
 }
 
+let verifyUser = async (uid) => {
+  try {
+    const response = await apiClient.post('/api/v1/verify-user', {}, {
+      params: { uid }
+    });
+    return response;
+  } catch (error) {
+    return error.response;
+  }
+}
+
+let getStudentById = async (id) => {
+  try {
+    const response = await apiClient.get(`/api/v1/student/${id}`);
+    return response;
+  } catch (error) {
+    throw error.response;
+  }
+}
+
 export {
   apiClient, getStaffs, getStaffById, createStaff, updateStaff, deleteStaffs, importStaffs, exportStaffs, login,
-  getStudents, createStudent, updateStudent, deleteStudents, importStudents, exportStudents,
+  getStudents, createStudent, updateStudent, deleteStudents, importStudents, exportStudents, getStudentById,
   getDepartments, createDepartments, updateDepartments, deleteDepartments, importDepartments, exportDepartments, getDepartmentById,
   getDepartmentTypes,
-  getUsers, updateUser, deleteUsers, exportUsers, resetUserPassword,
+  getUsers, updateUser, deleteUsers, exportUsers, resetUserPassword, verifyUser,
   uploadPhoto
 };

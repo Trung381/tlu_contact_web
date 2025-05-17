@@ -3,7 +3,7 @@ import { Button, Modal, Form, Upload, Table } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import '../App.css';
 
-const ModalCustom = ({ showModal, modal }) => {
+const ModalCustom = ({ showModal, modal, loadingUploadPhoto }) => {
 	const [file, setFile] = useState(null);
 	const [confirmLoading, setConfirmLoading] = useState(false);
 	const [isUpload, setIsUpload] = useState(false);

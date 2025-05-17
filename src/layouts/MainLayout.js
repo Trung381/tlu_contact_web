@@ -11,6 +11,7 @@ const ITEM = {
   staff: 'staff',
   student: 'student',
   user: 'user',
+  emailDomain: 'email-domain'
 }
 
 const MainLayout = () => {
@@ -29,7 +30,8 @@ const MainLayout = () => {
       'department-type': routes.departmentType,
       'staff': routes.staff,
       'student': routes.student,
-      'user': routes.user
+      'user': routes.user,
+      'email-domain': routes.emailDomain
     };
 
     const matchedKey = Object.keys(managementRoutes).find(key =>
@@ -71,11 +73,6 @@ const MainLayout = () => {
                     >
                       Danh bạ đơn vị
                     </NavLink>
-                    <NavLink to={routes.departmentType} className={`item-menu-custom w-full hover:text-[#1677ff] ${(selected === ITEM.departmentType) && `text-[#0f6ef4] font-medium`}`}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Loại phòng ban
-                    </NavLink>
                     <NavLink to={routes.staff} className={`item-menu-custom w-full hover:text-[#1677ff]  ${(selected === ITEM.staff) && `text-[#0f6ef4] font-medium`}`}
                       onClick={() => setIsOpen(false)}
                     >
@@ -86,11 +83,21 @@ const MainLayout = () => {
                     >
                       Danh bạ sinh viên
                     </NavLink>
+                    <NavLink to={routes.departmentType} className={`item-menu-custom w-full hover:text-[#1677ff] ${(selected === ITEM.departmentType) && `text-[#0f6ef4] font-medium`}`}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Loại đơn vị
+                    </NavLink>
                     <NavLink to={routes.user} className={`item-menu-custom w-full hover:text-[#1677ff] ${(selected === ITEM.user) && `text-[#0f6ef4] font-medium`}`}
                       onClick={() => setIsOpen(false)}
                     >
-                      Người dùng
+                      Người dùng hệ thống
                     </NavLink>
+                    {/* <NavLink to={routes.emailDomain} className={`item-menu-custom w-full hover:text-[#1677ff] ${(selected === ITEM.emailDomain) && `text-[#0f6ef4] font-medium`}`}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Tên miền email
+                    </NavLink> */}
                   </div>
                 )}
               </li>
@@ -156,7 +163,7 @@ const MainLayout = () => {
             </div>
           </div>
         </div>
-        <div className="mt-10 text-center text-sm">
+        <div className="mt-10 text-center text-sm text-blue-500">
           <p>© {new Date().getFullYear()} - Bản quyền thuộc về Trường Đại học Thủy lợi</p>
         </div>
       </footer>

@@ -5,8 +5,9 @@ import Table from '../components/Table';
 import SearchInput from '../components/SearchInput';
 import { EditOutlined, DeleteOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
 import { Form, Tooltip, Button, Input, Upload } from 'antd';
-import { getStudents, createStudent, deleteStudents, updateStudent, importStudents, exportStudents } from '../services/api';
+import { getStudents, createStudent, deleteStudents, updateStudent, importStudents, exportStudents, uploadPhoto, getStudentById } from '../services/api';
 import DepartmentSelect from '../components/DepartmentSelect';
+import Photo from '../components/Photo';
 
 const StudentPage = () => {
   const [showModalCreate, setShowModalCreate] = useState(false);
@@ -15,6 +16,8 @@ const StudentPage = () => {
   const [data, setData] = useState([]);
   const [tableParams, setTableParams] = useState({
     pagination: { current: 1, pageSize: 20, },
+    sorting: true,
+    filter: null
   });
   const [showModalDelete, setShowModalDelete] = useState(false);
   const [showModalUpdate, setShowModalUpdate] = useState(false);
@@ -42,7 +45,7 @@ const StudentPage = () => {
   const fetchData = async (params = tableParams) => {
     setLoading(true);
     const response = await getStudents(
-      params.pagination.current - 1, params.pagination.pageSize, true, searchText, false, null
+      params.pagination.current - 1, params.pagination.pageSize, params.sorting, searchText, false, params.filter
     );
     setLoading(false);
     if (response.status === 200) {
@@ -123,8 +126,12 @@ const StudentPage = () => {
   }
 
   const handleTableChange = (pagination, filters, sorter) => {
-    setTableParams({ pagination, filters, ...sorter, });
-    fetchData({ pagination, filters, ...sorter, });
+    let sort = sorter.order === "ascend" ? true : (sorter.order === "descend" ? false : true)
+    setTableParams({ 
+      pagination, filters,
+      sorting: sort
+    });
+    fetchData({ pagination, filters, sorting: sort, });
   };
 
   const fillData = (record) => {
@@ -188,6 +195,24 @@ const StudentPage = () => {
     setLoading(false)
   };
 
+  const uploadStudentPhoto = async (file, id) => {
+    // setLoadingUploadPhoto(true)
+    const response = await uploadPhoto(file, 'student', id);
+    // setLoadingUploadPhoto(false);
+    if (response.status === 200) {
+      handleSetNotification('success', 'Thành công', 'Cập nhật ảnh thành công')
+      const updated = await getStudentById(id);
+      if (updated.status == 200) {
+        // Cập nhật lại modal view với record mới nhất
+
+        handleView(updated.data.data);
+      }
+      fetchData(tableParams);
+    } else {
+      handleSetNotification("error", "Thất bại", response.data.message || 'Đã có lỗi xảy ra. Vui lòng thử lại sau.');
+    }
+  }
+
   const handleView = (record) => {
     setShowModalView(true);
     setModal({
@@ -195,11 +220,7 @@ const StudentPage = () => {
       formContent: (
         <div className="space-y-4">
           <div className="flex items-center space-x-4">
-            <img
-              src={record.photo ? record.photo : `/avatar.png`}
-              alt="avatar"
-              className="w-32 h-32 rounded-full object-cover"
-            />
+            <Photo loadingUploadPhoto={loading} record={record} upload={uploadStudentPhoto} />
             <div>
               <h3 className="text-lg font-semibold">{record.name}</h3>
               <p><span className="font-medium">Mã sinh viên: </span>{record.id}</p>
@@ -249,6 +270,9 @@ const StudentPage = () => {
     title: 'Họ và tên',
     dataIndex: 'name',
     sorter: true,
+    showSorterTooltip: {
+      title: 'Sắp xếp theo họ và tên',
+    },
     render: name => `${name}`,
     width: 180,
   },

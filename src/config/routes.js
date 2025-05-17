@@ -13,6 +13,7 @@ const routes = {
   profile: '/profile',
   forgetPassword: '/forget-password',
   changePassword: '/change-password',
+  emailDomain: '/email-domain',
   notFound: '*'
 };
 

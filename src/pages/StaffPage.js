@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getStaffs, createStaff, updateStaff, deleteStaffs, importStaffs, exportStaffs } from "../services/api";
+import { getStaffs, createStaff, updateStaff, deleteStaffs, importStaffs, exportStaffs, getDepartments, getStaffById, uploadPhoto } from "../services/api";
 import Table from "../components/Table";
 import Modal from "../components/Modal";
 import Notification from "../components/Notification";
@@ -7,6 +7,7 @@ import SearchInput from "../components/SearchInput";
 import { Button, Form, Tooltip, Input, Upload } from 'antd';
 import { EditOutlined, DeleteOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
 import DepartmentSelect from '../components/DepartmentSelect';
+import Photo from "../components/Photo";
 
 const StaffPage = () => {
   const [showModal, setShowModal] = useState(false);
@@ -15,6 +16,8 @@ const StaffPage = () => {
   const [data, setData] = useState([]);
   const [tableParams, setTableParams] = useState({
     pagination: { current: 1, pageSize: 20, },
+    sorting: true,
+    filter: null
   });
   const [showModalDelete, setShowModalDelete] = useState(false);
   const [showModalUpdate, setShowModalUpdate] = useState(false);
@@ -34,6 +37,8 @@ const StaffPage = () => {
   });
   const [selectedRows, setSelectedRows] = useState([]);
   const [searchText, setSearchText] = useState("");
+  const [departments, setDepartments] = useState([]);
+  const [loadingUploadPhoto, setLoadingUploadPhoto] = useState(false);
 
   const handleSetNotification = (type, msg, desc) => {
     setNotification({ type: type, message: msg, desc: desc })
@@ -42,7 +47,7 @@ const StaffPage = () => {
   const fetchData = async (params = tableParams) => {
     setLoading(true);
     const response = await getStaffs(
-      params.pagination.current - 1, params.pagination.pageSize, true, searchText, false, null
+      params.pagination.current - 1, params.pagination.pageSize, params.sorting, searchText, false, params.filter
     );
     setLoading(false);
     if (response.status === 200) {
@@ -61,7 +66,17 @@ const StaffPage = () => {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  const fetchDeptments = async () => {
+    const response = await getDepartments(0, 1000, true, null, false, null);
+    if (response.status === 200) {
+      setDepartments(response.data.data)
+    } else { setDepartments([]) }
+  };
+
+  useEffect(() => {
+    fetchData();
+    fetchDeptments();
+  }, []);
 
   const exporting = async (params = tableParams) => {
     handleSetNotification('info', 'Đang xử lý', 'Quá trình trích xuất dữ liệu đang được tiến hành, bạn hãy lưu file sau khi hoàn tất.')
@@ -86,8 +101,12 @@ const StaffPage = () => {
   };
 
   const handleTableChange = (pagination, filters, sorter) => {
-    setTableParams({ pagination, filters, ...sorter, });
-    fetchData({ pagination, filters, ...sorter, });
+    let sort = sorter.order === "ascend" ? true : (sorter.order === "descend" ? false : true)
+    setTableParams({
+      pagination, filters,
+      sorting: sort
+    });
+    fetchData({ pagination, filters, sorting: sort, });
   };
 
   const handleView = (record) => {
@@ -97,11 +116,7 @@ const StaffPage = () => {
       formContent: (
         <div className="space-y-4">
           <div className="flex items-center space-x-4">
-            <img
-              src={record.photo ? record.photo : `/avatar.png`}
-              alt="avatar"
-              className="w-32 h-32 rounded-full object-cover"
-            />
+            <Photo loadingUploadPhoto={loadingUploadPhoto} record={record} upload={uploadStaffPhoto} />
             <div>
               <h3 className="text-lg font-semibold">{record.name}</h3>
               <p className="text-gray-600">Mã số: {record.id}</p>
@@ -161,6 +176,9 @@ const StaffPage = () => {
       title: 'Họ và tên',
       dataIndex: 'name',
       sorter: true,
+      showSorterTooltip: {
+        title: 'Sắp xếp theo họ và tên',
+      },
       render: name => `${name}`,
       width: 180,
     },
@@ -179,6 +197,7 @@ const StaffPage = () => {
     {
       title: 'Đơn vị',
       dataIndex: 'departments',
+      // filters: departments.map(record => ({ text: record.name, value: record.id })),
       render: departments => {
         if (!Array.isArray(departments)) return '';
         return departments.map(dep => dep.name).join(', ');
@@ -286,6 +305,24 @@ const StaffPage = () => {
         form.resetFields();
       },
     });
+  }
+
+  const uploadStaffPhoto = async (file, id) => {
+    setLoadingUploadPhoto(true)
+    const response = await uploadPhoto(file, 'staff', id);
+    setLoadingUploadPhoto(false);
+    if (response.status === 200) {
+      handleSetNotification('success', 'Thành công', 'Cập nhật ảnh thành công')
+      const updated = await getStaffById(id);
+      if (updated.status == 200) {
+        // Cập nhật lại modal view với record mới nhất
+
+        handleView(updated.data.data);
+      }
+      fetchData(tableParams);
+    } else {
+      handleSetNotification("error", "Thất bại", response.data.message || 'Đã có lỗi xảy ra. Vui lòng thử lại sau.');
+    }
   }
 
   const getFormContent = (onFinish) => (
