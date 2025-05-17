@@ -178,15 +178,16 @@ const UserPage = () => {
   }, [searchText]);
 
   const verify = async (id) => {
-    setShowModalVerify(true);
-    const response = await verifyUser(id);
     setShowModalVerify(false);
-    if (response.status === 200) {
+    setLoading(true);
+    const response = await verifyUser(id);
+    if (response.status == 200) {
       handleSetNotification('success', 'Thành công', response.data.message || null)
       fetchData();
     } else {
       handleSetNotification('error', 'Thất bại', response.data.message || null)
     }
+    setLoading(false);
   }
 
   const handleVerifyEmail = (record) => {
@@ -269,14 +270,16 @@ const UserPage = () => {
               style={{ color: 'red' }}
             />
           </Tooltip>
-          <Tooltip title="Xác thực email">
-            <Button
-              icon={<CheckOutlined />}
-              onClick={() => handleVerifyEmail(record)}
-              type="link"
-              style={{ color: 'blue' }}
-            />
-          </Tooltip>
+          {!record.isEmailVerified && (
+            <Tooltip title="Xác thực email">
+              <Button
+                icon={<CheckOutlined />}
+                onClick={() => handleVerifyEmail(record)}
+                type="link"
+                style={{ color: 'blue' }}
+              />
+            </Tooltip>
+          )}
         </div>
       ),
       // with: 120,
@@ -284,16 +287,16 @@ const UserPage = () => {
   ];
 
   const handleResetPassword = (id, email) => {
-    console.log(id, email);
     const resetPW = async (id, email) => {
+      setShowModalResetPassword(false);
       setLoading(true);
       const response = await resetUserPassword(id, email);
-      setLoading(false);
       if (response.status == 200) {
         handleSetNotification('success', 'Đặt lại mật khẩu thành công', null);
       } else {
         handleSetNotification('error', 'Thất bại', response.data.message || null)
       }
+      setLoading(false);
     };
 
     setShowModalResetPassword(true);

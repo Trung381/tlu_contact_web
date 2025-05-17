@@ -8,6 +8,7 @@ import { Button, Form, Tooltip, Input, Upload } from 'antd';
 import { EditOutlined, DeleteOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
 import DepartmentSelect from '../components/DepartmentSelect';
 import Photo from "../components/Photo";
+// import { getDepartmentModal } from '../utils/departmentModal';
 
 const StaffPage = () => {
   const [showModal, setShowModal] = useState(false);
@@ -249,7 +250,7 @@ const StaffPage = () => {
     setLoading(true);
     const formattedData = {
       ...values,
-      departments: values.departmentIds.map(code => ({ code }))
+      departments: values.departmentIds.map(id => ({ id }))
     };
     const response = await createStaff(formattedData);
     if (response.status === 201 || response.status === 200) {
@@ -264,8 +265,9 @@ const StaffPage = () => {
   }
 
   const importing = async (file) => {
-    setLoading(true);
     setShowModal(false);
+    setLoading(true);
+    handleSetNotification('info', 'Đang xử lý dữ liệu', null)
     const response = await importStaffs(file);
     if (response.status === 200) {
       handleSetNotification('success', 'Thành công', 'Import thành công!')
@@ -325,7 +327,7 @@ const StaffPage = () => {
     }
   }
 
-  const getFormContent = (onFinish) => (
+  const getFormContent = (onFinish, isUpdate=false) => (
     <Form form={form} layout="vertical" onFinish={onFinish}
       initialValues={{
         id: '',
@@ -339,7 +341,7 @@ const StaffPage = () => {
     >
       <Form.Item label="Mã số" name="id"
         rules={[{ required: true, message: 'Vui lòng nhập mã nhân viên!' }]}
-      ><Input />
+      ><Input disabled={isUpdate} />
       </Form.Item>
 
       <Form.Item label="Họ và tên" name="name"
@@ -350,7 +352,7 @@ const StaffPage = () => {
       <Form.Item label="Đơn vị" name="departmentIds"
         rules={[{ required: true, message: 'Vui lòng chọn đơn vị!' }]}
       >
-        <DepartmentSelect mode="multiple" />
+        <DepartmentSelect value={form.departmentIds}  mode="multiple" />
       </Form.Item>
 
       <Form.Item label="Chức vụ" name="position"
@@ -388,7 +390,7 @@ const StaffPage = () => {
       position: record.position,
       phone: record.phone,
       email: record.email,
-      departmentIds: record.departments?.map(dep => dep.code) || [],
+      departmentIds: record.departments?.map(dep => dep.id) || [],
       userID: record.userID,
     });
   }
@@ -434,7 +436,7 @@ const StaffPage = () => {
       isCreateForm: false,
       title: `Cập nhật thông tin cán bộ, giảng viên`,
       form: form,
-      formContent: getFormContent(update),
+      formContent: getFormContent(update, true),
       footer: [
         <Button key="cancle" onClick={() => setShowModalUpdate(false)}>Hủy</Button>,
         <Button key="submit" loading={loading} onClick={() => form.submit()}
@@ -451,7 +453,7 @@ const StaffPage = () => {
     setLoading(true);
     const formattedData = {
       ...values,
-      departments: values.departmentIds.map(code => ({ code }))
+      departments: values.departmentIds.map(id => ({ id }))
     };
     const response = await updateStaff(values.id, formattedData);
     if (response.status === 200) {

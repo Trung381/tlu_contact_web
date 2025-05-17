@@ -118,7 +118,7 @@ const DepartmentTypePage = () => {
     form.resetFields();
     setModal({
       ...modal,
-      title: "Thêm mới loại phòng ban",
+      title: "Thêm mới loại đơn vị",
       onOk: () => form.submit(),
       onCancel: () => {
         setShowModalCreate(false);
@@ -148,7 +148,7 @@ const DepartmentTypePage = () => {
     fillData(record);
     setModal({
       ...modal,
-      title: `Cập nhật thông tin loại phòng ban`,
+      title: `Cập nhật thông tin loại đơn vị`,
       form: form,
       formContent: getFormContent((values) => {
         update({ ...values, id: record.id });
@@ -169,9 +169,9 @@ const DepartmentTypePage = () => {
   const handleDelete = async (record) => {
     setShowModalDelete(true);
     setModal({
-      title: `Xóa thông tin loại phòng ban`,
+      title: `Xóa thông tin loại đơn vị`,
       formContent: (
-        <p>Bạn có chắc chắn muốn xóa thông tin loại phòng ban <strong>{record.name}</strong> không?</p>
+        <p>Bạn có chắc chắn muốn xóa thông tin loại đơn vị <strong>{record.name}</strong> không?</p>
       ),
       footer: [
         <Button key="cancle" onClick={() => setShowModalDelete(false)}>
@@ -196,7 +196,7 @@ const DepartmentTypePage = () => {
 
     setShowModalDelete(true);
     setModal({
-      title: `Xóa thông tin loại phòng ban`,
+      title: `Xóa thông tin loại đơn vị`,
       formContent: (
         <p>Bạn có chắc chắn muốn xóa <strong>{selectedRows.length}</strong> loại đơn vị đã chọn không?</p>
       ),
@@ -221,17 +221,25 @@ const DepartmentTypePage = () => {
 
   const getFormContent = (onFinish) => (
     <Form form={form} layout="vertical" onFinish={onFinish}
-      initialValues={{ name: '', }}
+      initialValues={{ 
+        id: '',
+        name: '',
+        desc: '' 
+      }}
     >
-      <Form.Item label="Tên loại phòng ban" name="name"
-        rules={[{ required: true, message: 'Vui lòng nhập tên loại phòng ban!' }]}
+      <Form.Item label="Tên loại đơn vị" name="name"
+        rules={[{ required: true, message: 'Vui lòng nhập tên loại đơn vị.' }]}
       ><Input />
+      </Form.Item>
+
+      <Form.Item label="Mô tả" name="desc"
+      ><Input.TextArea rows={4} maxLength={500} showCount />
       </Form.Item>
     </Form>
   );
 
   const columns = [{
-    title: 'Tên loại phòng ban',
+    title: 'Tên loại đơn vị',
     dataIndex: 'name',
     // sorter: true,
     render: name => `${name}`,
@@ -277,7 +285,7 @@ const DepartmentTypePage = () => {
         <Modal showModal={showModalDelete} modal={modal} />
         <Modal showModal={showModalUpdate} modal={modal} />
         <Table
-          title={'Loại phòng ban'}
+          title={'Loại đơn vị'}
           columns={columns}
           loading={loading}
           data={data}

@@ -83,8 +83,9 @@ const DepartmentPage = () => {
   }
 
   const importing = async (file) => {
-    setLoading(true);
     setShowModalCreate(false);
+    setLoading(true);
+    handleSetNotification('info', 'Đang xử lý dữ liệu', null)
     const response = await importDepartments(file);
     if (response.status === 200) {
       handleSetNotification('success', 'Thành công', 'Import thành công!')
@@ -205,7 +206,7 @@ const DepartmentPage = () => {
       formContent: (
         <div className="space-y-4">
           <div className="flex items-center space-x-4">
-            <Photo loadingUploadPhoto={loadingUploadPhoto} record={record} upload={uploadDepartmentPhoto} />
+            <Photo loadingUploadPhoto={loadingUploadPhoto} record={record} upload={uploadDepartmentPhoto} defaultSrc='./tlu.png' />
             <div>
               <h3 className="text-lg font-semibold">{record.name}</h3>
               <p><span className="font-medium">Mã đơn vị: </span>{record.id}</p>
@@ -364,7 +365,7 @@ const DepartmentPage = () => {
   },
   ];
 
-  const getFormContent = (onFinish) => (
+  const getFormContent = (onFinish, isUpdate = false) => (
     <Form form={form} layout="vertical" onFinish={onFinish}
       initialValues={{
         id: '',
@@ -378,7 +379,7 @@ const DepartmentPage = () => {
     >
       <Form.Item label="Mã đơn vị" name="id"
         rules={[{ required: true, message: 'Vui lòng nhập mã đơn vị!' }]}
-      ><Input />
+      ><Input disabled={isUpdate} />
       </Form.Item>
 
       <Form.Item label="Loại đơn vị" name="typeId"
@@ -463,7 +464,7 @@ const DepartmentPage = () => {
       isCreateForm: false,
       title: `Cập nhật thông tin đơn vị`,
       form: form,
-      formContent: getFormContent(update),
+      formContent: getFormContent(update, true),
       footer: [
         <Button key="cancle" onClick={() => setShowModalUpdate(false)}>Hủy</Button>,
         <Button key="submit" loading={loading} onClick={() => form.submit()}

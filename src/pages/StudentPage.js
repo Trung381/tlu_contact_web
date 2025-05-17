@@ -141,7 +141,7 @@ const StudentPage = () => {
       address: record.address,
       phone: record.phone,
       email: record.email,
-      department: record.department?.code
+      department: record.department?.id
     });
   }
 
@@ -267,6 +267,12 @@ const StudentPage = () => {
     width: 50,
   },
   {
+    title: 'Mã sinh viên',
+    dataIndex: 'id',
+    render: id => `${id}`,
+    width: 110,
+  },
+  {
     title: 'Họ và tên',
     dataIndex: 'name',
     sorter: true,
@@ -292,7 +298,7 @@ const StudentPage = () => {
     title: 'Email',
     dataIndex: 'email',
     render: email => `${email}`,
-    width: 230,
+    width: 210,
   },
   {
     title: 'Địa chỉ',
@@ -335,7 +341,7 @@ const StudentPage = () => {
   },
   ];
 
-  const getFormContent = (onFinish) => {
+  const getFormContent = (onFinish, isUpdate=false) => {
     return (
       <Form form={form} layout="vertical" onFinish={(values) => {
         onFinish(values);
@@ -350,7 +356,7 @@ const StudentPage = () => {
       >
         <Form.Item label="Mã sinh viên" name="id"
           rules={[{ required: true, message: 'Vui lòng nhập mã sinh viên!' }]}
-        ><Input />
+        ><Input disabled={isUpdate} />
         </Form.Item>
 
         <Form.Item label="Họ và tên" name="name"
@@ -358,7 +364,11 @@ const StudentPage = () => {
         ><Input />
         </Form.Item>
 
-        <Form.Item label="Địa chỉ" name="address"><Input /></Form.Item>
+        <Form.Item label="Đơn vị" name="department"
+          rules={[{ required: true, message: 'Vui lòng chọn đơn vị!' }]}
+        >
+          <DepartmentSelect />
+        </Form.Item>
 
         <Form.Item label="Số điện thoại" name="phone"
           rules={[{ required: true, message: 'Vui lòng nhập số điện thoại!' }]}
@@ -373,18 +383,14 @@ const StudentPage = () => {
         ><Input />
         </Form.Item>
 
+        <Form.Item label="Địa chỉ" name="address"><Input /></Form.Item>
+
         <Form.Item label="Ảnh" name="photo" valuePropName="fileList"
           getValueFromEvent={(e) => e?.fileList}
         >
           <Upload action="/upload.do" listType="picture" maxCount={1} showUploadList={false}>
             <Button icon={<UploadOutlined />}>Tải ảnh lên</Button>
           </Upload>
-        </Form.Item>
-
-        <Form.Item label="Đơn vị" name="department"
-          rules={[{ required: true, message: 'Vui lòng chọn đơn vị!' }]}
-        >
-          <DepartmentSelect />
         </Form.Item>
       </Form>
     );
@@ -430,7 +436,7 @@ const StudentPage = () => {
       isCreateForm: false,
       title: `Cập nhật thông tin sinh viên`,
       form: form,
-      formContent: getFormContent(update),
+      formContent: getFormContent(update, true),
       footer: [
         <Button key="cancle" onClick={() => setShowModalUpdate(false)}>Hủy</Button>,
         <Button key="submit" loading={loading} onClick={() => form.submit()}

@@ -382,7 +382,7 @@ let resetUserPassword = async (uid, email) => {
     const response = await apiClient.post('/api/v1/users/reset-password', {
       uid, email
     });
-    return response.data;
+    return response;
   } catch (error) {
     return error.response;
   }

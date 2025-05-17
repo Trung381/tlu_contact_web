@@ -2,7 +2,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { Tooltip, Spin } from 'antd';
 import { useRef } from 'react';
 
-const Photo = ({ loadingUploadPhoto, record, upload }) => {
+const Photo = ({ loadingUploadPhoto, record, upload, defaultSrc = './avatar.png' }) => {
   const fileInputRef = useRef(null);
 
   const handlePhotoClick = () => {
@@ -24,7 +24,7 @@ const Photo = ({ loadingUploadPhoto, record, upload }) => {
         <Spin spinning={loadingUploadPhoto} indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />}>
           <img
             onClick={handlePhotoClick}
-            src={record.photo ? record.photo : `/tlu.png`}
+            src={record.photo ? record.photo : defaultSrc}
             alt="photo"
             className={`w-32 h-32 rounded-full object-cover border-2 border-solid border-blue-600 cursor-pointer ${loadingUploadPhoto ? 'animate-pulse' : ''}`}
           />
